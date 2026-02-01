@@ -1,4 +1,4 @@
-# 📺 IPTV Stream Tester
+# � StreamWatcher - Professional IPTV Channel Monitoring Suite
 
 <div align="center">
 
@@ -7,7 +7,7 @@
 ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows-lightgrey.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
-**Monitor and validate IPTV channels with real-time dashboard**
+**Real-Time IPTV Stream Validation & Quality Monitoring Dashboard**
 
 [Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Configuration](#%EF%B8%8F-configuration) • [Dashboard](#-dashboard)
 
@@ -17,7 +17,7 @@
 
 ## 🎯 Overview
 
-IPTV Stream Tester is a powerful Python-based tool designed to validate and monitor IPTV channels in real-time. It features a beautiful web dashboard that displays live testing results, resolution detection, buffering metrics, and disconnect tracking across multiple iterations.
+**StreamWatcher** is a professional-grade IPTV stream validator with a real-time web dashboard. Designed for network engineers, ISPs, and content providers who need reliable stream quality monitoring and channel validation. Features sequential testing to isolate server-side issues, cumulative quality metrics, and beautiful live analytics.
 
 ### ✨ Key Highlights
 
