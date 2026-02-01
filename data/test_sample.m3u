@@ -1,41 +1,21 @@
 #EXTM3U
-#EXTINF:-1 tvg-id="" tvg-name="Big Buck Bunny 720p" tvg-logo="" group-title="Test Streams",Big Buck Bunny 720p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
-#EXTINF:-1 tvg-id="" tvg-name="Sintel 1080p" tvg-logo="" group-title="Test Streams",Sintel 1080p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4
-#EXTINF:-1 tvg-id="" tvg-name="Elephant Dream 720p" tvg-logo="" group-title="Test Streams",Elephant Dream 720p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4
-#EXTINF:-1 tvg-id="" tvg-name="Tears of Steel 1080p" tvg-logo="" group-title="Test Streams",Tears of Steel 1080p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4
-#EXTINF:-1 tvg-id="" tvg-name="For Bigger Blazes 720p" tvg-logo="" group-title="Test Streams",For Bigger Blazes 720p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4
-#EXTINF:-1 tvg-id="" tvg-name="For Bigger Escape 720p" tvg-logo="" group-title="Test Streams",For Bigger Escape 720p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4
-#EXTINF:-1 tvg-id="" tvg-name="For Bigger Fun 720p" tvg-logo="" group-title="Test Streams",For Bigger Fun 720p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4
-#EXTINF:-1 tvg-id="" tvg-name="For Bigger Joyrides 720p" tvg-logo="" group-title="Test Streams",For Bigger Joyrides 720p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4
-#EXTINF:-1 tvg-id="" tvg-name="For Bigger Meltdowns 720p" tvg-logo="" group-title="Test Streams",For Bigger Meltdowns 720p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4
-#EXTINF:-1 tvg-id="" tvg-name="Subaru Outback 1080p" tvg-logo="" group-title="Test Streams",Subaru Outback 1080p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4
-#EXTINF:-1 tvg-id="" tvg-name="We Are Going On Bullrun 720p" tvg-logo="" group-title="Test Streams",We Are Going On Bullrun 720p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4
-#EXTINF:-1 tvg-id="" tvg-name="What Care Can You Get 720p" tvg-logo="" group-title="Test Streams",What Care Can You Get 720p
-http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4
-#EXTINF:-1 tvg-id="" tvg-name="NASA TV Media" tvg-logo="" group-title="Live Streams",NASA TV Media
-https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8
-#EXTINF:-1 tvg-id="" tvg-name="NASA TV Public" tvg-logo="" group-title="Live Streams",NASA TV Public
-https://ntv2.akamaized.net/hls/live/2013923/NASA-NTV2-HLS/master.m3u8
-#EXTINF:-1 tvg-id="" tvg-name="Al Jazeera English" tvg-logo="" group-title="Live Streams",Al Jazeera English
-https://live-hls-web-aje.getaj.net/AJE/index.m3u8
-#EXTINF:-1 tvg-id="" tvg-name="France 24 English" tvg-logo="" group-title="Live Streams",France 24 English
-https://cdn.klowdtv.net/803B48A/n1.klowdtv.net/live1/france24_720p/playlist.m3u8
-#EXTINF:-1 tvg-id="" tvg-name="Red Bull TV" tvg-logo="" group-title="Live Streams",Red Bull TV
-https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8
-#EXTINF:-1 tvg-id="" tvg-name="Euronews English" tvg-logo="" group-title="Live Streams",Euronews English
-https://rakuten-euronews-1-pt.samsung.wurl.tv/manifest/playlist.m3u8
-#EXTINF:-1 tvg-id="" tvg-name="Bloomberg TV" tvg-logo="" group-title="Live Streams",Bloomberg TV
-https://bloomberg.com/media-manifest/streams/asia.m3u8
-#EXTINF:-1 tvg-id="" tvg-name="Sky News" tvg-logo="" group-title="Live Streams",Sky News
-https://siloh.pluto.tv/lilo/production/SkyNews/master.m3u8
+#EXTINF:-1 tvg-id="3ABNCanada.ca@SD",3ABN Canada
+https://3abn.bozztv.com/3abncanada/3ABN/master.m3u8
+#EXTINF:-1 tvg-id="DareToDreamNetwork.us@SD",3ABN Dare To Dream Network
+https://3abn.bozztv.com/3abn2/d2d_live/smil:d2d_live.smil/playlist.m3u8
+#EXTINF:-1 tvg-id="3ABNEnglish.us@SD",3ABN English
+https://3abn.bozztv.com/3abn2/3abn_live/smil:3abn_live.smil/playlist.m3u8
+#EXTINF:-1 tvg-id="3ABNFrench.us@SD",3ABN French
+https://3abn.bozztv.com/3abn2/Fre_live/smil:Fre_live.smil/playlist.m3u8
+#EXTINF:-1 tvg-id="3ABNInternational.us@SD",3ABN International Network
+https://3abn.bozztv.com/3abn2/Int_live/smil:Int_live.smil/playlist.m3u8
+#EXTINF:-1 tvg-id="3ABNKids.us@SD",3ABN Kids Network
+https://3abn.bozztv.com/3abn2/Kids_live/smil:Kids_live.smil/playlist.m3u8
+#EXTINF:-1 tvg-id="3ABNLatino.us@SD",3ABN Latino
+https://3abn.bozztv.com/3abn2/Lat_live/smil:Lat_live.smil/playlist.m3u8
+#EXTINF:-1 tvg-id="3ABNPraiseHimMusicNetwork.us@SD",3ABN Praise Him Music Network
+https://3abn.bozztv.com/3abn1/PraiseHim/smil:PraiseHim.smil/playlist.m3u8
+#EXTINF:-1 tvg-id="3ABNProclaimNetwork.us@SD",3ABN Proclaim! Network
+https://3abn.bozztv.com/3abn2/Pro_live/smil:Pro_live.smil/playlist.m3u8
+#EXTINF:-1 tvg-id="3ABNRussia.ru@SD",Три Ангела
+https://3abn.bozztv.com/3abn2/Rus_live/smil:Rus_live.smil/playlist.m3u8
