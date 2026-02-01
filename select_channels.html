@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Select IPTV Channels</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6fa; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+    h1 { text-align: center; color: #2a3a5e; }
+    .group-list { margin-bottom: 18px; }
+    .channel-list { max-height: 300px; overflow: auto; border: 1px solid #e0e6ed; border-radius: 6px; background: #fafbfc; padding: 10px; }
+    .channel-list label { display: block; margin-bottom: 4px; }
+    .btn { margin-top: 18px; padding: 10px 24px; background: #4f8cff; color: #fff; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; }
+    .btn:hover { background: #357ae8; }
+    .msg { color: #2ecc40; margin-top: 16px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Select Groups/Channels</h1>
+    <div class="group-list" id="group-list"></div>
+    <form id="channel-form">
+      <div class="channel-list" id="channel-list"></div>
+      <button class="btn" type="submit">Save Selection</button>
+    </form>
+    <div class="msg" id="msg"></div>
+  </div>
+  <script>
+    // CHANGE THIS URL to your M3U source if needed
+    const m3uUrl = 'https://raw.githubusercontent.com/Nigel1992/m-QhPaQta3MB-iptv/refs/heads/main/IPTV%20NL.m3u?token=GHSAT0AAAAAADULXJIH5MHBEIGJR5PILIRY2L7YJPQ';
+    let channels = [];
+    let groups = [];
+    async function loadM3U() {
+      const resp = await fetch(m3uUrl);
+      const text = await resp.text();
+      const lines = text.split(/\r?\n/);
+      let currentGroup = '';
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith('#EXTINF')) {
+          let name = line.split(',')[1] || 'unknown';
+          let groupMatch = line.match(/group-title="([^"]+)"/);
+          if (groupMatch) currentGroup = groupMatch[1];
+          // Find next non-empty, non-comment line for URL
+          let j = i + 1;
+          while (j < lines.length && (!lines[j] || lines[j].startsWith('#'))) j++;
+          let url = lines[j] || '';
+          channels.push({name, url, group: currentGroup});
+          i = j;
+        }
+      }
+      groups = Array.from(new Set(channels.map(c => c.group)));
+      renderGroups();
+      renderChannels();
+    }
+    function renderGroups() {
+      const groupDiv = document.getElementById('group-list');
+      groupDiv.innerHTML = groups.map(g => `<label style='margin-right:12px;'><input type='checkbox' class='groupbox' value='${g.replace(/'/g, "&#39;")}' checked> ${g}</label>`).join('');
+      groupDiv.querySelectorAll('input').forEach(cb => cb.addEventListener('change', renderChannels));
+    }
+    function renderChannels() {
+      const checkedGroups = Array.from(document.querySelectorAll('.groupbox:checked')).map(cb => cb.value);
+      const channelDiv = document.getElementById('channel-list');
+      channelDiv.innerHTML = channels.filter(c => checkedGroups.includes(c.group)).map((c,i) => `<label><input type='checkbox' class='channelbox' value='${i}' checked> ${c.name} <span style='color:#888;font-size:0.9em;'>[${c.group}]</span></label>`).join('');
+    }
+    document.getElementById('channel-form').onsubmit = function(e) {
+      e.preventDefault();
+      const checked = Array.from(document.querySelectorAll('.channelbox:checked')).map(cb => parseInt(cb.value));
+      const selected = checked.map(i => channels[i]);
+      // Save to channel_selection.json (download to user, user must place in workspace)
+      const blob = new Blob([JSON.stringify(selected, null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'channel_selection.json';
+      a.click();
+      document.getElementById('msg').textContent = 'Selection saved! Place channel_selection.json in your IPTV Tester folder before running tests.';
+    };
+    loadM3U();
+  </script>
+</body>
+</html>

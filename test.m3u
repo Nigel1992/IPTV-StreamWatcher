@@ -1,0 +1,5 @@
+#EXTM3U
+#EXTINF:-1,Test Channel 1
+http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+#EXTINF:-1,Test Channel 2
+http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4

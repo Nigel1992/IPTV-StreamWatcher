@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPTV Tester Results</title>
+  <style>
+    :root {
+      --bg-primary: #f4f6fa;
+      --bg-secondary: #fff;
+      --text-primary: #2a3a5e;
+      --text-secondary: #888;
+      --border-color: #e0e6ed;
+      --hover-color: #f0f4ff;
+      --button-bg: #4f8cff;
+      --button-hover: #357ae8;
+    }
+
+    body.dark-mode {
+      --bg-primary: #1a1a1a;
+      --bg-secondary: #2d2d2d;
+      --text-primary: #e0e0e0;
+      --text-secondary: #aaa;
+      --border-color: #444;
+      --hover-color: #3a3a3a;
+      --button-bg: #0d47a1;
+      --button-hover: #1565c0;
+    }
+
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-primary); color: var(--text-primary); margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
+    .container { max-width: 1200px; margin: 40px auto; background: var(--bg-secondary); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 32px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    h1 { text-align: center; color: var(--text-primary); margin: 0; flex: 1; }
+    .btn-dark-mode { padding: 8px 16px; background: var(--button-bg); color: #fff; border: none; border-radius: 6px; font-size: 0.9em; cursor: pointer; transition: background 0.3s; }
+    .btn-dark-mode:hover { background: var(--button-hover); }
+    .progress-bar { width: 100%; background: var(--border-color); border-radius: 6px; overflow: hidden; margin-bottom: 24px; }
+    .progress { height: 18px; background: #4f8cff; width: 0%; transition: width 0.4s; }
+    .table-wrapper { overflow-x: auto; background: var(--bg-secondary); border-radius: 8px; }
+    .results-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    .results-table th, .results-table td { padding: 10px; border-bottom: 1px solid var(--border-color); text-align: left; white-space: nowrap; }
+    .results-table th { background: var(--bg-primary); color: var(--text-primary); font-weight: 600; }
+    .status-pass { color: #2ecc40; font-weight: bold; }
+    .status-testing { color: #3498db; font-weight: bold; }
+    .status-pending { color: #95a5a6; font-weight: bold; }
+    .status-buffering { color: #e67e22; font-weight: bold; }
+    .status-error { color: #e74c3c; font-weight: bold; }
+    .status-issue { color: #e74c3c; font-weight: bold; }
+    .channel-row { transition: background 0.2s; }
+    .channel-row:hover { background: var(--hover-color); }
+    .summary { margin-top: 24px; font-size: 1.1em; color: var(--text-primary); }
+    .loading { text-align: center; color: var(--text-secondary); margin-top: 24px; }
+    .btn-refresh { display: block; margin: 24px auto 0; padding: 10px 24px; background: var(--button-bg); color: #fff; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; transition: background 0.3s; }
+    .btn-refresh:hover { background: var(--button-hover); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>IPTV Tester Progress & Results</h1>
+      <button class="btn-dark-mode" onclick="toggleDarkMode()">🌙 Dark</button>
+    </div>
+    <div class="timer" id="timer" style="text-align:center; font-size:1.1em; margin-bottom:16px;"></div>
+    <div id="loopInfo" style="text-align:center; font-size:0.95em; color: var(--text-secondary); margin-bottom:16px;"></div>
+    <div class="progress-bar">
+      <div class="progress" id="progress"></div>
+    </div>
+    <div class="table-wrapper">
+      <table class="results-table" id="results-table">
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th>Status</th>
+            <th>Resolution</th>
+            <th>Tested</th>
+            <th>Disconnects</th>
+            <th>Buffering</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="results-body">
+          <!-- Results will be injected here -->
+        </tbody>
+      </table>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="loading" id="loading" style="display:none;">Running tests, please wait...</div>
+    <button class="btn-refresh" onclick="location.reload()">Refresh</button>
+  </div>
+  <script>
+    // Loop variables (read from backend)
+    let currentIteration = 0;
+    let loopMode = 'single';
+    
+    // Dark mode toggle
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+      updateButtonText();
+    }
+
+    function updateButtonText() {
+      const btn = document.querySelector('.btn-dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        btn.textContent = '☀️ Light';
+      } else {
+        btn.textContent = '🌙 Dark';
+      }
+    }
+
+    // Load dark mode preference
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark-mode');
+    }
+    updateButtonText();
+
+    // Timer logic using test_start from results.json
+    let testStart = null;
+    let testDuration = null;
+    let timerInterval = null;
+    let originalTestStart = localStorage.getItem('originalTestStart');
+    
+    // Fetch and update results.json
+    function fetchResults() {
+      fetch('results.json?_=' + Date.now())
+        .then(r => {
+          if (!r.ok) throw new Error('No results yet');
+          return r.json();
+        })
+        .then(data => {
+          if (data.test_start) {
+            testStart = data.test_start;
+            // Store original test start on first iteration
+            if (!originalTestStart || data.current_iteration === 1) {
+              originalTestStart = data.test_start;
+              localStorage.setItem('originalTestStart', originalTestStart);
+            }
+            testDuration = data.test_duration || 0;
+            updateTimer();
+          }
+          // Update loop info from backend
+          if (data.loop_mode) {
+            loopMode = data.loop_mode;
+            currentIteration = data.current_iteration || 0;
+            updateLoopInfo();
+          }
+          updateUI(data);
+        })
+        .catch(err => {
+          document.getElementById('loading').style.display = 'block';
+          document.getElementById('summary').textContent = '';
+          document.getElementById('results-body').innerHTML = '';
+        });
+    }
+
+    function updateTimer(forceStop) {
+      if (!originalTestStart) return;
+      const now = Math.floor(Date.now() / 1000);
+      const elapsed = now - parseInt(originalTestStart);
+      
+      // Format time display
+      const formatTime = (seconds) => {
+        if (seconds < 60) return `${seconds}s`;
+        if (seconds < 3600) {
+          const mins = Math.floor(seconds / 60);
+          const secs = seconds % 60;
+          return `${mins}m ${secs}s`;
+        }
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        return `${hours}h ${mins}m`;
+      };
+      
+      const elapsedDisplay = formatTime(elapsed);
+      document.getElementById('timer').textContent = `Total Time: ${elapsedDisplay}`;
+      
+      if (forceStop && timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+    
+    function updateLoopInfo() {
+      const infoEl = document.getElementById('loopInfo');
+      if (loopMode === 'single') {
+        infoEl.textContent = '';
+      } else if (loopMode === 'loop-times') {
+        infoEl.textContent = `Loop Iteration: ${currentIteration}`;
+      } else if (loopMode === 'infinite') {
+        infoEl.textContent = `Infinite Loop - Iteration: ${currentIteration}`;
+      }
+    }
+    function updateUI(data) {
+      let channelsToShow = data.channels || [];
+      const total = channelsToShow.length;
+      const duration = data.test_duration || 0;
+      // Only count as done if status is pass, error, or buffering (not pending or testing)
+      const done = channelsToShow.filter(c => c.status && c.status !== 'pending' && c.status !== 'testing').length;
+      document.getElementById('progress').style.width = (done/Math.max(1,total)*100) + '%';
+      const body = document.getElementById('results-body');
+      body.innerHTML = '';
+      const nowSecs = Math.floor(Date.now() / 1000);
+      channelsToShow.forEach(ch => {
+        let statusClass = 'status-' + (ch.status || 'pending');
+        // For testing channels, calculate elapsed time from test_start, but cap at duration
+        let elapsedSeconds = ch.tested_seconds || 0;
+        if (ch.status === 'testing' && data.test_start) {
+          elapsedSeconds = nowSecs - data.test_start;
+          // Cap at the configured duration
+          if (duration && elapsedSeconds > duration) {
+            elapsedSeconds = duration;
+          }
+        }
+        
+        // Determine icon based on resolution
+        let resolutionIcon = '';
+        if (ch.resolution === '1280x720') {
+          resolutionIcon = '<img src="https://cdn-icons-png.freepik.com/512/974/974490.png?fd=1&filename=720_974490.png" style="height: 32px; width: 32px;" title="720p HD">';
+        } else if (ch.resolution === '1920x1080') {
+          resolutionIcon = '<img src="https://cdn-icons-png.freepik.com/512/11625/11625958.png?fd=1&filename=power_11625958.png" style="height: 32px; width: 32px;" title="1080p Full HD">';
+        } else if (ch.resolution === '3840x2160') {
+          resolutionIcon = '<img src="https://cdn-icons-png.freepik.com/512/13013/13013153.png?fd=1&filename=4k-film_13013153.png" style="height: 32px; width: 32px;" title="4K Ultra HD">';
+        }
+        
+        // Add resolution icon to channel name if present
+        let nameWithIcon = ch.name;
+        if (ch.resolution === '1280x720') {
+          nameWithIcon = `<span style="display: inline-flex; align-items: center; gap: 4px;"><img src="https://cdn-icons-png.freepik.com/512/974/974490.png?fd=1&filename=720_974490.png" style="height: 14px; width: 14px;"> ${ch.name}</span>`;
+        } else if (ch.resolution === '1920x1080') {
+          nameWithIcon = `<span style="display: inline-flex; align-items: center; gap: 4px;"><img src="https://cdn-icons-png.freepik.com/512/11625/11625958.png?fd=1&filename=power_11625958.png" style="height: 14px; width: 14px;"> ${ch.name}</span>`;
+        } else if (ch.resolution === '3840x2160') {
+          nameWithIcon = `<span style="display: inline-flex; align-items: center; gap: 4px;"><img src="https://cdn-icons-png.freepik.com/512/13013/13013153.png?fd=1&filename=4k-film_13013153.png" style="height: 14px; width: 14px;"> ${ch.name}</span>`;
+        }
+        
+        body.innerHTML += `<tr class="channel-row">
+          <td>${nameWithIcon}</td>
+          <td class="${statusClass}">${ch.status}</td>
+          <td>${resolutionIcon || (ch.resolution || '')}</td>
+          <td>${elapsedSeconds}s</td>
+          <td><span class="${(ch.disconnects_count||0) > 0 ? 'status-error' : 'status-pass'}">${ch.disconnects_count || 0}</span></td>
+          <td><span class="${(ch.buffering_events && ch.buffering_events.length) > 0 ? 'status-error' : 'status-pass'}">${ch.buffering_events ? ch.buffering_events.length : 0}</span></td>
+          <td>${ch.details || ''}</td>
+        </tr>`;
+      });
+      document.getElementById('summary').textContent = `Completed: ${done} / ${total}`;
+      // Hide loading if all channels have finished testing (not pending or testing)
+      const allDone = channelsToShow.every(c => c.status && c.status !== 'pending' && c.status !== 'testing');
+      document.getElementById('loading').style.display = allDone ? 'none' : 'block';
+    }
+    fetchResults();
+    timerInterval = setInterval(fetchResults, 1000);
+  </script>
+</body>
+</html>

@@ -78,15 +78,25 @@ class MainWindow(Gtk.Window):
         dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
         box = dialog.get_content_area()
         box.set_spacing(6)
-        entry = Gtk.Entry(); entry.set_placeholder_text('https://example.com/playlist.m3u')
-        box.add(Gtk.Label(label='Paste M3U URL below:'))
+        entry = Gtk.Entry(); entry.set_placeholder_text('https://example.com/playlist.m3u or /path/to/file.m3u')
+        box.add(Gtk.Label(label='Paste M3U URL or choose local file:'))
         box.add(entry)
+        file_btn = Gtk.Button(label='Choose file')
+        box.add(file_btn)
+        def on_choose(_b):
+            fc = Gtk.FileChooserDialog(title='Select M3U file', transient_for=self, action=Gtk.FileChooserAction.OPEN)
+            fc.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+            resp = fc.run()
+            if resp == Gtk.ResponseType.OK:
+                entry.set_text(fc.get_filename())
+            fc.destroy()
+        file_btn.connect('clicked', on_choose)
         dialog.show_all()
         resp = dialog.run()
-        url = entry.get_text().strip()
+        source = entry.get_text().strip()
         dialog.destroy()
-        if resp == Gtk.ResponseType.OK and url:
-            future = asyncio.run_coroutine_threadsafe(self._import_and_run(url), self.loop)
+        if resp == Gtk.ResponseType.OK and source:
+            future = asyncio.run_coroutine_threadsafe(self._import_and_run(source), self.loop)
             # show a small waiting dialog
             wait = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, Gtk.ButtonsType.NONE, 'Importing...')
             wait.show_all()
@@ -100,28 +110,36 @@ class MainWindow(Gtk.Window):
             wait.destroy()
             # refresh UI
             asyncio.run_coroutine_threadsafe(self.load_data(), self.loop)
-            # show summary of imported and a few results
-            msg = f'Imported {imported} channels. Ran {len(results)} checks.\n\nSample results:\n'
-            for r in results[:5]:
-                msg += f"{r['name']}: {r['result']} ({r['notes']})\n"
+            # show summary of imported channels and note background checks
+            if results:
+                msg = f'Imported {imported} channels. Ran {len(results)} checks.\n\nSample results:\n'
+                for r in results[:5]:
+                    msg += f"{r['name']}: {r['result']} ({r['notes']})\n"
+            else:
+                msg = f'Imported {imported} channels. Checks started in background — click Refresh to see results.'
             dlg = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, Gtk.ButtonsType.OK, msg)
             dlg.run(); dlg.destroy()
 
     async def _import_and_run(self, url):
-        # fetch M3U and parse
+        # fetch M3U and parse, add channels, and start background checks (non-blocking)
         import aiohttp
-        from .worker import fetch_text, parse_m3u, Monitor
-        from .db import add_channels_bulk
+        from .worker import fetch_text, parse_m3u, run_checks_concurrent
+        from .db import add_channels_bulk, list_channels
         async with aiohttp.ClientSession() as session:
             txt = await fetch_text(session, url)
             items = await parse_m3u(txt)
         if not items:
             return [], 0
-        await add_channels_bulk(items)
-        # run one check pass
-        mon = Monitor(None, interval=DEFAULTS['check_interval_sec'])
-        results = await mon.run_once()
-        return results, len(items)
+        added_ids = await add_channels_bulk(items)
+        # build channel tuples for checks
+        all_ch = await list_channels()
+        id_set = set(added_ids)
+        channels_to_check = [(c[0], c[1], c[2]) for c in all_ch if c[0] in id_set]
+        # start background task to run checks without blocking the UI
+        # concurrency and per-check timeout are reasonable defaults
+        asyncio.create_task(run_checks_concurrent(channels_to_check, concurrency=6, per_check_timeout=20))
+        # return immediately so the dialog can close and UI can refresh
+        return [], len(items)
 
         # initialize DB and load
         threading.Thread(target=self._init_async).start()
