@@ -7,6 +7,8 @@
 ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows-lightgrey.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
+[![Discord](https://img.shields.io/discord/YOUR_SERVER_ID?color=7289da&label=Join%20Our%20Discord&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/5kQ9SmpxGn)
+
 **Real-Time IPTV Stream Validation & Quality Monitoring Dashboard**
 
 [Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Configuration](#%EF%B8%8F-configuration) • [Dashboard](#-dashboard)
