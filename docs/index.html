@@ -6,18 +6,20 @@
   <title>StreamWatcher · Demo (simulated)</title>
   <link rel="stylesheet" href="assets/theme.css">
   <style>
-    .shell { width: min(1100px, calc(100% - 48px)); margin: 0 auto; padding: 22px 0 70px; }
+    .shell { width: min(900px, calc(100% - 48px)); margin: 0 auto; padding: 22px 0 70px; }
     .demo-banner { margin: 0 0 18px; padding: 12px 16px; border: 1px solid rgba(255,180,84,0.4); border-radius: 12px; background: rgba(255,180,84,0.1); color: var(--warning); font-size: 0.85rem; }
     .demo-banner strong { color: var(--text); }
-    .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 800px) { .demo-grid { grid-template-columns: 1fr; } }
-    .card { padding: 18px; }
-    .card h3 { margin: 0 0 8px; font-size: 1rem; }
-    .card p { margin: 0 0 12px; color: var(--muted); font-size: 0.85rem; }
-    .btn { padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); cursor: pointer; font-weight: 600; }
+    .step-card { padding: 18px; margin-bottom: 16px; }
+    .step-card h3 { margin: 0 0 8px; font-size: 1rem; }
+    .step-card p { margin: 0 0 12px; color: var(--muted); font-size: 0.85rem; }
+    .btn { padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); cursor: pointer; font-weight: 600; font-size: 0.85rem; }
     .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #07101f; border: none; }
-    .progress-track { height: 10px; border-radius: 999px; background: var(--surface-3); overflow: hidden; border: 1px solid var(--border); }
+    .input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+    .hidden { display: none !important; }
+    .progress-track { height: 10px; border-radius: 999px; background: var(--surface-3); overflow: hidden; border: 1px solid var(--border); margin: 10px 0; }
     .progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-2) 58%, var(--accent-3)); transition: width 0.3s ease; }
+    .channel { padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .channel:last-child { border-bottom: none; }
     table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 12px; }
     th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
     th { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -35,33 +37,39 @@
     </div>
   </header>
   <main class="shell">
-    <div class="demo-banner"><strong>Simulated demo.</strong> This page mimics the StreamWatcher UI and animates a fake test run. No real streams are probed, no data leaves your browser. Run <code>python run_local_test.py</code> locally for real validation.</div>
-    <div class="demo-grid">
-      <div class="card">
-        <h3>Step 1 · Load a playlist</h3>
-        <p>Paste an M3U URL or use the sample playlist.</p>
-        <input class="input" id="url" value="data/test_sample.m3u" style="width:100%;margin-bottom:10px;">
-        <button class="btn primary" id="loadBtn">Load playlist (simulated)</button>
-      </div>
-      <div class="card">
-        <h3>Step 2 · Choose channels</h3>
-        <p>Select channels to test.</p>
-        <div id="channels" style="max-height:180px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:8px;"></div>
-        <button class="btn" id="selectAll" style="margin-top:8px;">Select all</button>
-      </div>
-      <div class="card">
-        <h3>Step 3 · Configure &amp; run</h3>
-        <p>Duration: 15s · Concurrency: 3 · Loop: single</p>
-        <button class="btn primary" id="startBtn" disabled>Start simulated test</button>
-      </div>
-      <div class="card">
-        <h3>Live progress</h3>
-        <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-        <p id="progressText" style="margin-top:8px;color:var(--muted);font-size:0.85rem;">Idle</p>
+    <div class="demo-banner"><strong>Simulated demo.</strong> This page mimics the StreamWatcher wizard and animates a fake test run. No real streams are probed and no data leaves your browser. Run <code>python run_local_test.py</code> locally for real validation.</div>
+
+    <!-- Step 1 -->
+    <div class="card step-card" id="step1">
+      <h3>Step 1 · Load a playlist</h3>
+      <p>Paste an M3U URL or use the sample playlist.</p>
+      <input class="input" id="url" value="data/test_sample.m3u" style="margin-bottom:10px;">
+      <button class="btn primary" id="loadBtn">Load playlist (simulated)</button>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="card step-card hidden" id="step2">
+      <h3>Step 2 · Choose channels</h3>
+      <p>Select the channels you want to test.</p>
+      <div id="channels" style="max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:10px;"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn" id="selectAll">Select all</button>
+        <button class="btn primary" id="next2">Next step →</button>
       </div>
     </div>
-    <div class="card" style="margin-top:16px;">
-      <h3>Results</h3>
+
+    <!-- Step 3 -->
+    <div class="card step-card hidden" id="step3">
+      <h3>Step 3 · Configure &amp; run</h3>
+      <p>Duration: 15s · Concurrency: 3 · Loop: single · Checks: resolution, framerate, audio, buffering</p>
+      <button class="btn primary" id="startBtn">Start simulated test</button>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="card step-card hidden" id="step4">
+      <h3>Step 4 · Live progress</h3>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <p id="progressText" style="margin-top:8px;color:var(--muted);font-size:0.85rem;">Idle</p>
       <table>
         <thead><tr><th>Channel</th><th>Status</th><th>Resolution</th><th>Framerate</th><th>Tested</th></tr></thead>
         <tbody id="resultsBody"></tbody>
@@ -78,27 +86,44 @@
     ];
     let selected = new Set();
     const channelsEl = document.getElementById('channels');
+    const resultsBody = document.getElementById('resultsBody');
+
     function renderChannels() {
       channelsEl.innerHTML = channels.map((c,i) => `<label style="display:block;padding:4px 0;"><input type="checkbox" data-i="${i}" ${selected.has(i)?'checked':''}> ${c.name}</label>`).join('');
       channelsEl.querySelectorAll('input').forEach(cb => cb.addEventListener('change', e => {
         const i = +e.target.dataset.i;
         if (e.target.checked) selected.add(i); else selected.delete(i);
-        document.getElementById('startBtn').disabled = selected.size === 0;
+        document.getElementById('next2').disabled = selected.size === 0;
       }));
     }
     renderChannels();
-    document.getElementById('selectAll').addEventListener('click', () => { channels.forEach((_,i)=>selected.add(i)); renderChannels(); document.getElementById('startBtn').disabled=false; });
+
+    document.getElementById('selectAll').addEventListener('click', () => {
+      channels.forEach((_,i) => selected.add(i));
+      renderChannels();
+      document.getElementById('next2').disabled = false;
+    });
+
     document.getElementById('loadBtn').addEventListener('click', () => {
       document.getElementById('loadBtn').textContent = 'Loaded 5 channels';
-      renderChannels();
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.remove('hidden');
     });
-    const resultsBody = document.getElementById('resultsBody');
+
+    document.getElementById('next2').addEventListener('click', () => {
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.remove('hidden');
+    });
+
     function renderResults() {
       resultsBody.innerHTML = channels.map(c => `<tr><td>${c.name}</td><td><span class="badge ${c.status}">${c.status}</span></td><td>${c.res}</td><td>${c.fps}</td><td>${c.tested}s</td></tr>`).join('');
     }
     renderResults();
+
     document.getElementById('startBtn').addEventListener('click', () => {
       document.getElementById('startBtn').disabled = true;
+      document.getElementById('step3').classList.add('hidden');
+      document.getElementById('step4').classList.remove('hidden');
       const order = [...selected];
       let idx = 0;
       const total = order.length;
