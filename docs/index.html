@@ -362,14 +362,14 @@
 <script>
 (function(){
   const DEMO_CHANNELS = [
-    {name:'3ABN Canada', url:'http://demo/stream1.ts', group:'Entertainment'},
-    {name:'3ABN English', url:'http://demo/stream2.ts', group:'Entertainment'},
-    {name:'3ABN Kids', url:'http://demo/stream3.ts', group:'Kids'},
-    {name:'3ABN Latino', url:'http://demo/stream4.ts', group:'Latino'},
-    {name:'ESPN Premium', url:'http://demo/stream5.ts', group:'Sports'},
-    {name:'NPO 1 4K', url:'http://demo/stream6.ts', group:'Netherlands'},
-    {name:'BBC One', url:'http://demo/stream7.ts', group:'UK'},
-    {name:'CNN International', url:'http://demo/stream8.ts', group:'News'},
+    {name:'Channel One', url:'http://demo/stream1.ts', group:'Entertainment'},
+    {name:'Channel Two', url:'http://demo/stream2.ts', group:'Entertainment'},
+    {name:'Kids TV', url:'http://demo/stream3.ts', group:'Kids'},
+    {name:'Latino TV', url:'http://demo/stream4.ts', group:'Latino'},
+    {name:'Sports HD', url:'http://demo/stream5.ts', group:'Sports'},
+    {name:'News 24', url:'http://demo/stream6.ts', group:'News'},
+    {name:'Movie Channel', url:'http://demo/stream7.ts', group:'Movies'},
+    {name:'Music TV', url:'http://demo/stream8.ts', group:'Music'},
   ];
   const DEMO_CATS = [
     {id:'1', name:'Entertainment'}, {id:'2', name:'Sports'}, {id:'3', name:'Kids'}, {id:'4', name:'Netherlands'}, {id:'5', name:'News'}
@@ -1242,7 +1242,7 @@
           loop_iterations: loopMode === 'loop-times' ? iterations : 1,
           options
         });
-        window.location.href = '/results.html';
+        window.location.href = 'results.html';
       } catch (error) {
         showToast(error.message, true);
         els.startBtn.disabled = false;

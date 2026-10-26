@@ -414,7 +414,7 @@
     </div>
     <div class="top-actions">
       <span class="pill stopped" id="livePill"><span class="live-dot"></span><span id="liveText">Connecting…</span></span>
-      <a class="btn btn-secondary" href="/" id="newTestBtn">
+      <a class="btn btn-secondary" href="index.html" id="newTestBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 5v14M5 12h14"/>
         </svg>
@@ -545,7 +545,7 @@
           <div class="big-spinner"></div>
           <h3>Waiting for a test to start</h3>
           <p>Open the setup page to choose a playlist and start validating streams.</p>
-          <a class="btn btn-primary btn-sm" href="/">Open setup</a>
+          <a class="btn btn-primary btn-sm" href="index.html">Open setup</a>
         </div>
       </div>
     </section>
@@ -864,7 +864,7 @@
         const running = state.status && state.status.running;
         els.emptyState.innerHTML = running
           ? '<div class="big-spinner"></div><h3>Starting the test…</h3><p>Channels will appear here as soon as the first probe begins.</p>'
-          : '<div class="big-spinner" style="opacity:.35"></div><h3>No test results yet</h3><p>Open the setup page to choose a playlist, pick channels and start validating streams.</p><a class="btn btn-primary btn-sm" href="/">Open setup</a>';
+          : '<div class="big-spinner" style="opacity:.35"></div><h3>No test results yet</h3><p>Open the setup page to choose a playlist, pick channels and start validating streams.</p><a class="btn btn-primary btn-sm" href="index.html">Open setup</a>';
         return;
       }
 
