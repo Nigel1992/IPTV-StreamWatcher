@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+  <script>
+    // On GitHub Pages, redirect to the simulated demo (the real app needs a backend).
+    if (location.hostname.endsWith('github.io') && !location.pathname.includes('/docs/')) {
+      location.replace(location.pathname.replace(/\\/$/, '') + '/docs/');
+    }
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StreamWatcher · IPTV stream validation</title>
@@ -357,6 +363,7 @@
   .modal-card .progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-2) 58%, var(--accent-3)); transition: width 0.25s ease; }
   .modal-card p { margin: 10px 0 0; color: var(--muted); font-size: 0.85rem; }
   </style>
+  <style>.demo-banner { margin: 0 0 18px; padding: 12px 16px; border: 1px solid rgba(255,180,84,0.4); border-radius: 12px; background: rgba(255,180,84,0.1); color: var(--warning); font-size: 0.85rem; } .demo-banner strong { color: var(--text); } .demo-banner code { background: var(--surface-2); padding: 1px 4px; border-radius: 4px; }</style>
 
 <script>
 (function(){
@@ -366,12 +373,12 @@
     {name:'3ABN Kids', url:'http://demo/stream3.ts', group:'Kids'},
     {name:'3ABN Latino', url:'http://demo/stream4.ts', group:'Latino'},
     {name:'ESPN Premium', url:'http://demo/stream5.ts', group:'Sports'},
-    {name:'Ziggo Sport HD', url:'http://demo/stream6.ts', group:'Sports'},
-    {name:'NPO 1 4K', url:'http://demo/stream7.ts', group:'Netherlands'},
-    {name:'BBC One', url:'http://demo/stream8.ts', group:'UK'},
+    {name:'NPO 1 4K', url:'http://demo/stream6.ts', group:'Netherlands'},
+    {name:'BBC One', url:'http://demo/stream7.ts', group:'UK'},
+    {name:'CNN International', url:'http://demo/stream8.ts', group:'News'},
   ];
   const DEMO_CATS = [
-    {id:'1', name:'Entertainment'}, {id:'2', name:'Sports'}, {id:'3', name:'Kids'}, {id:'4', name:'Netherlands'}
+    {id:'1', name:'Entertainment'}, {id:'2', name:'Sports'}, {id:'3', name:'Kids'}, {id:'4', name:'Netherlands'}, {id:'5', name:'News'}
   ];
   function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
   const origFetch = window.fetch;
@@ -390,7 +397,6 @@
     if (u.includes('/api/xtream/streams')) {
       const body = opts && opts.body ? JSON.parse(opts.body) : {};
       const ids = body.category_ids || [];
-      const map = {'1':['Entertainment'],'2':['Sports'],'3':['Kids'],'4':['Netherlands']};
       const groups = ids.map(id => (DEMO_CATS.find(c=>c.id===String(id))||{}).name || 'Group');
       const channels = DEMO_CHANNELS.filter(c => groups.includes(c.group));
       return new Response(JSON.stringify({ok:true, channels: channels.map(c=>({...c})), groups, count:channels.length}), {headers:{'Content-Type':'application/json'}});
@@ -400,45 +406,10 @@
       localStorage.setItem('demo-run', JSON.stringify({start: Date.now(), channels: body.selected_channels || DEMO_CHANNELS, duration: body.duration_seconds || 15}));
       return new Response(JSON.stringify({ok:true, message:'Test started', run_id:'demo123'}), {headers:{'Content-Type':'application/json'}});
     }
-    if (u.includes('/api/status')) {
-      const run = JSON.parse(localStorage.getItem('demo-run')||'null');
-      const elapsed = run ? (Date.now()-run.start)/1000 : 0;
-      const total = run ? run.channels.length* (run.duration||15) : 0;
-      const running = run ? elapsed < total/2 + 5 : false;
-      return new Response(JSON.stringify({state: running?'running':'finished', running, error:null, run_id:'demo123', started_at: run?Math.floor(run.start/1000):null, finished_at: run&&!running?Math.floor(Date.now()/1000):null, source:'demo', channel_count: run?run.channels.length:0, duration_seconds: run?run.duration:15, loop_mode:'single', loop_iterations:1}), {headers:{'Content-Type':'application/json'}});
-    }
-    if (u.includes('/api/results')) {
-      const run = JSON.parse(localStorage.getItem('demo-run')||'null');
-      if (!run) return new Response(JSON.stringify({channels:[], state:'idle'}), {status:404, headers:{'Content-Type':'application/json'}});
-      const elapsed = (Date.now()-run.start)/1000;
-      const perChannel = run.duration || 15;
-      const channels = run.channels.map((c,i) => {
-        const startOffset = i * (perChannel/2);
-        const tested = Math.min(perChannel, Math.max(0, elapsed - startOffset));
-        let status = 'pending';
-        if (tested >= perChannel) status = (i===4?'issue':'pass');
-        else if (tested > 0) status = 'testing';
-        return {
-          name: c.name, url: c.url, group: c.group, status,
-          details: (i===4?'Not smooth: duplicated frames (kept 51/101)':''),
-          resolution: c.res||'1280x720', resolution_label: (c.res==='1920x1080'?'1080p':'720p'),
-          framerate: c.fps, fps: parseFloat((c.fps||'').replace(/[^0-9.]/g,''))||null,
-          video_codec:'h264', audio_codec:'aac', bitrate_kbps:2500,
-          test_duration: tested>=perChannel? perChannel+'s':'',
-          tested_seconds: Math.round(tested),
-          issues:{buffering:0, errors:0, drops:0},
-          disconnects_count:0, disconnects:[], buffering_total_seconds:0, buffering_events:[],
-          resolution_ok:true, framerate_ok:true, frame_drops:0,
-          smooth: i!==4, smooth_ok: i!==4, black_screen:false,
-        };
-      });
-      return new Response(JSON.stringify({channels, test_start: Math.floor(run.start/1000), test_duration: run.duration, loop_mode:'single', current_iteration:1, run_id:'demo123', options:{}, state: elapsed >= run.channels.length*perChannel/2+5 ? 'finished' : 'running', generated_at: Math.floor(Date.now()/1000)}), {headers:{'Content-Type':'application/json'}});
-    }
     return new Response(JSON.stringify({ok:true}), {headers:{'Content-Type':'application/json'}});
   };
 })();
 </script>
-  <style>.demo-banner { margin: 0 0 18px; padding: 12px 16px; border: 1px solid rgba(255,180,84,0.4); border-radius: 12px; background: rgba(255,180,84,0.1); color: var(--warning); font-size: 0.85rem; } .demo-banner strong { color: var(--text); } .demo-banner code { background: var(--surface-2); padding: 1px 4px; border-radius: 4px; }</style>
 </head>
 <body>
   <header class="topbar">
