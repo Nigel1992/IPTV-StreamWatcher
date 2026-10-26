@@ -4,7 +4,8 @@
   <script>
     // On GitHub Pages, redirect to the simulated demo (the real app needs a backend).
     if (location.hostname.endsWith('github.io') && !location.pathname.includes('/docs/')) {
-      location.replace(location.pathname.replace(/\\/$/, '') + '/docs/');
+      var p = location.pathname.replace(/\/$/, '');
+      location.replace(p + '/docs/');
     }
   </script>
   <meta charset="UTF-8">
