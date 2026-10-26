@@ -47,7 +47,20 @@
 
 ## 📸 Screenshots
 
-![StreamWatcher setup UI](assets/screenshot.png)
+**Step 1 — Load a playlist**
+![Step 1: load playlist](assets/screenshot-step1.png)
+
+**Step 2 — Choose categories (Xtream)**
+![Step 2: choose categories](assets/screenshot-step2-categories.png)
+
+**Step 3 — Choose channels**
+![Step 3: choose channels](assets/screenshot-step3.png)
+
+**Step 4 — Configure & run**
+![Step 4: configure](assets/screenshot-step4.png)
+
+**Live dashboard**
+![Live dashboard](assets/screenshot-dashboard.png)
 
 ---
 

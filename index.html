@@ -1340,6 +1340,8 @@
         if (source) {
           els.sourceInput.value = source;
           await loadFromSource();
+          const stepParam = params.get('step');
+          if (stepParam) showStep(Number(stepParam));
         } else if (defaults.default_source) {
           els.sourceInput.value = defaults.default_source;
         }
