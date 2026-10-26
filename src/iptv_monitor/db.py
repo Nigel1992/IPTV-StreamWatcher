@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS results (
   notes TEXT,
   throughput_mbps REAL,
   startup_estimate_s REAL,
+  resolution TEXT,
+  framerate REAL,
   FOREIGN KEY(channel_id) REFERENCES channels(id)
 );
 '''
@@ -27,6 +29,13 @@ async def init_db():
     async with aiosqlite.connect(DB_FILE) as db:
         await db.execute(CREATE_CHANNELS)
         await db.execute(CREATE_RESULTS)
+        # Migrate databases created by older versions.
+        cur = await db.execute('PRAGMA table_info(results)')
+        columns = {row[1] for row in await cur.fetchall()}
+        if 'resolution' not in columns:
+            await db.execute('ALTER TABLE results ADD COLUMN resolution TEXT')
+        if 'framerate' not in columns:
+            await db.execute('ALTER TABLE results ADD COLUMN framerate REAL')
         await db.commit()
 
 async def add_channel(name, url):
@@ -65,9 +74,15 @@ async def list_channels():
         rows = await cur.fetchall()
         return rows
 
-async def insert_result(channel_id, result, notes='', throughput=None, startup=None):
+async def insert_result(channel_id, result, notes='', throughput=None, startup=None,
+                        resolution=None, framerate=None):
     async with aiosqlite.connect(DB_FILE) as db:
-        await db.execute('INSERT INTO results (channel_id, result, notes, throughput_mbps, startup_estimate_s) VALUES (?,?,?,?,?)', (channel_id, result, notes, throughput, startup))
+        await db.execute(
+            'INSERT INTO results '
+            '(channel_id, result, notes, throughput_mbps, startup_estimate_s, resolution, framerate) '
+            'VALUES (?,?,?,?,?,?,?)',
+            (channel_id, result, notes, throughput, startup, resolution, framerate),
+        )
         await db.commit()
 
 async def recent_results(channel_id, window_hours=24):

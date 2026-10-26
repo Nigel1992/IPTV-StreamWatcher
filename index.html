@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamWatcher · IPTV stream validation</title>
+  <link rel="stylesheet" href="assets/theme.css">
+  <style>
+    html, body { overflow-x: hidden; }
+    .shell {
+      width: min(1440px, calc(100% - 48px));
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 22px 0 70px;
+    }
+    .layout { max-width: 100%; }
+
+    .hero {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 32px;
+      padding: 34px 4px 8px;
+    }
+
+    .hero-copy { max-width: 760px; }
+
+    .hero h2 {
+      margin: 16px 0 14px;
+      font-size: clamp(2.1rem, 4.2vw, 3.6rem);
+      line-height: 1.02;
+      letter-spacing: -0.045em;
+      font-weight: 800;
+    }
+
+    .gradient-text {
+      background: linear-gradient(100deg, var(--accent), var(--accent-2) 55%, var(--accent-3));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 650px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .hero-facts {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      padding-bottom: 6px;
+    }
+
+    .fact {
+      min-width: 108px;
+      padding: 13px 15px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .fact strong { display: block; font-size: 0.95rem; }
+    .fact span { color: var(--muted); font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      align-items: start;
+      margin-top: 30px;
+    }
+
+    .layout > .start-card {
+      grid-column: 1 / -1;
+    }
+
+    .stack { display: contents; }
+    #configAside { display: block; grid-column: 1 / -1; }
+
+    .source-row { display: flex; gap: 10px; align-items: stretch; }
+    .source-row .input { flex: 1; }
+    .source-row .btn { min-height: 46px; flex: none; }
+
+    .source-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .divider { color: var(--faint); font-size: 0.75rem; padding: 0 4px; }
+
+    .file-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 0 10px;
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 650;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .file-label:hover { color: var(--text); background: var(--surface-2); }
+    .file-label svg { width: 15px; height: 15px; }
+
+    .load-status { margin-top: 13px; min-height: 18px; }
+    .load-status.error { color: var(--danger); }
+    .load-status.success { color: var(--success); }
+
+    .channels-card { overflow: hidden; }
+    .is-hidden { display: none !important; }
+
+    .channel-toolbar {
+      display: grid;
+      grid-template-columns: minmax(160px, 1fr) minmax(150px, 0.65fr) auto;
+      gap: 9px;
+      align-items: stretch;
+      padding: 0 24px;
+      margin-top: 18px;
+    }
+
+    .channel-toolbar .input { min-height: 40px; font-size: 0.84rem; }
+
+    .toolbar-actions { display: flex; gap: 6px; }
+
+    .channel-list {
+      max-height: 470px;
+      min-height: 180px;
+      overflow: auto;
+      padding: 6px 16px 8px;
+      margin-top: 10px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .channel-row {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr) minmax(0, 0.9fr);
+      gap: 11px;
+      align-items: center;
+      padding: 10px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+
+    .channel-row + .channel-row { border-top: 1px solid var(--border); }
+    .channel-row:hover { background: var(--surface-2); }
+
+    .channel-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent-2);
+      cursor: pointer;
+    }
+
+    .channel-main { min-width: 0; }
+    .channel-name {
+      display: block;
+      font-size: 0.87rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .channel-meta {
+      display: block;
+      color: var(--muted);
+      font-size: 0.72rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .channel-url {
+      color: var(--faint);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.68rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: right;
+    }
+
+    .channel-list-empty {
+      padding: 34px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .list-foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 13px 24px 17px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+
+    .duration-control { display: flex; gap: 8px; }
+    .duration-control .input:first-child { width: 42%; }
+    .duration-control select { width: 58%; }
+
+    .mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+
+    .mode-card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 8px 6px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 650;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .mode-card input { position: absolute; opacity: 0; pointer-events: none; }
+    .mode-card:hover { border-color: var(--border-strong); color: var(--text); }
+    .mode-card:has(input:checked) {
+      border-color: rgba(110, 231, 255, 0.45);
+      background: rgba(110, 231, 255, 0.1);
+      color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(110, 231, 255, 0.08) inset;
+    }
+
+    .iterations-row { display: flex; align-items: center; gap: 10px; margin-top: 11px; }
+    .iterations-row .input { width: 100px; min-height: 38px; }
+
+    .check-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+
+    .check-card {
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      gap: 11px;
+      align-items: start;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .check-card:hover { border-color: var(--border-strong); }
+    .check-card:has(input:checked) { border-color: rgba(139, 140, 255, 0.38); background: rgba(139, 140, 255, 0.075); }
+
+    .check-card input {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      margin: 1px 0 0;
+      border-radius: 5px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface-2);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .check-card input:checked { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; }
+    .check-card input:checked::after {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: 1px;
+      width: 5px;
+      height: 10px;
+      border: solid #07101f;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .check-copy strong { display: block; font-size: 0.82rem; font-weight: 650; }
+    .check-copy span { display: block; color: var(--muted); font-size: 0.72rem; line-height: 1.35; }
+
+    .threshold-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 13px; }
+
+    .advanced { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 13px; }
+    .advanced summary {
+      color: var(--muted);
+      font-size: 0.79rem;
+      font-weight: 650;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .advanced summary::-webkit-details-marker { display: none; }
+    .advanced summary::before { content: "+"; display: inline-block; width: 15px; color: var(--accent); }
+    .advanced[open] summary::before { content: "–"; }
+    .advanced-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-top: 13px; }
+
+    .start-card { position: sticky; top: 18px; }
+    .summary-list { display: flex; flex-direction: column; gap: 9px; margin: 4px 0 18px; }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .summary-row strong { color: var(--text); font-weight: 650; text-align: right; }
+    .start-btn { width: 100%; min-height: 52px; font-size: 0.95rem; border-radius: 14px; }
+    .start-note { margin: 12px 0 0; color: var(--faint); font-size: 0.73rem; text-align: center; }
+
+    .warn-text { color: var(--warning); }
+
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: minmax(0, 1fr); }
+      .start-card { position: static; }
+      .hero { align-items: flex-start; flex-direction: column; }
+      .hero-facts { justify-content: flex-start; }
+    }
+
+    @media (max-width: 700px) {
+      .shell { width: calc(100% - 28px); padding-top: 8px; }
+      .hero { padding-top: 22px; }
+      .source-row { flex-direction: column; }
+      .source-row .btn { width: 100%; }
+      .channel-toolbar { grid-template-columns: 1fr; padding: 0 20px; }
+      .toolbar-actions { justify-content: flex-start; }
+      .channel-row { grid-template-columns: 20px minmax(0, 1fr); }
+      .channel-url { display: none; }
+      .settings-grid, .threshold-grid, .advanced-grid { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+      .list-foot { padding: 13px 20px 17px; }
+    }
+  /* Modal dialog */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 998; }
+  .modal { position: fixed; inset: 0; z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal[hidden], .modal-backdrop[hidden] { display: none !important; }
+  .modal-card { width: min(420px, 100%); padding: 22px; border: 1px solid var(--border-strong); border-radius: 16px; background: var(--surface-solid); color: var(--text); box-shadow: var(--shadow); }
+  .modal-card h3 { margin: 0 0 12px; font-size: 1.05rem; }
+  .modal-card .progress-track { height: 10px; border-radius: 999px; background: var(--surface-3); overflow: hidden; border: 1px solid var(--border); }
+  .modal-card .progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-2) 58%, var(--accent-3)); transition: width 0.25s ease; }
+  .modal-card p { margin: 10px 0 0; color: var(--muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12h3l2.2-6 3.6 12 2.7-8 1.8 4H21"/>
+        </svg>
+      </div>
+      <div>
+        <h1>StreamWatcher</h1>
+        <p>IPTV stream validation suite</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="pill" id="enginePill" title="Local probe tools">
+        <span class="dot" id="engineDot"></span>
+        <span id="engineText">Checking tools…</span>
+      </span>
+      <button class="icon-btn" id="themeToggle" type="button" title="Toggle light/dark theme" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8Z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="pill"><span class="dot"></span>Local, private &amp; fast</span>
+        <h2>Test every stream.<br><span class="gradient-text">Know every detail.</span></h2>
+        <p>Load an M3U playlist, pick the channels you care about and validate resolution, framerate, audio, buffering and connection stability — all from one clean dashboard.</p>
+      </div>
+      <div class="hero-facts" aria-hidden="true">
+        <div class="fact"><strong>ffprobe</strong><span>Metadata</span></div>
+        <div class="fact"><strong>ffmpeg</strong><span>Stability</span></div>
+        <div class="fact"><strong>Live</strong><span>Results</span></div>
+      </div>
+    </section>
+
+    <form class="layout" id="setupForm" novalidate>
+      <section class="card" id="playlistCard">
+        <div class="card-head">
+          <div class="step">01</div>
+          <div>
+            <h3 class="card-title">Playlist source</h3>
+            <p class="card-sub">Point StreamWatcher at an M3U URL, a local playlist file, or upload one directly.</p>
+          </div>
+        </div>
+          <div class="card-body">
+            <div class="source-row">
+              <input class="input" id="sourceInput" type="text" spellcheck="false" autocomplete="off"
+                     placeholder="https://example.com/playlist.m3u  ·  /path/to/playlist.m3u">
+              <button class="btn btn-primary" id="loadBtn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>
+                </svg>
+                <span id="loadBtnText">Load playlist</span>
+              </button>
+            </div>
+            <div class="source-actions">
+              <label class="file-label" for="fileInput">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/>
+                </svg>
+                Upload .m3u file
+              </label>
+              <input type="file" class="sr-only" id="fileInput" accept=".m3u,.m3u8,.txt,application/vnd.apple.mpegurl,audio/x-mpegurl,text/plain">
+              <span class="divider">or</span>
+              <button class="btn btn-ghost btn-sm" id="sampleBtn" type="button">Use sample playlist</button>
+            </div>
+            <p class="hint load-status" id="loadStatus">Playlists are fetched locally — nothing is uploaded to a third party.</p>
+          </div>
+        </section>
+
+        <section class="card channels-card is-hidden" id="channelsCard">
+          <div class="card-head">
+            <div class="step">03</div>
+            <div style="flex:1; min-width:0;">
+              <h3 class="card-title">Choose channels <span class="badge badge-accent" id="channelCountBadge">0</span></h3>
+              <p class="card-sub">Search, filter by group, then select exactly what should be tested.</p>
+            </div>
+          </div>
+
+          <div class="channel-toolbar">
+            <input class="input" id="channelSearch" type="search" placeholder="Search channels…" autocomplete="off">
+            <select class="input" id="groupFilter">
+              <option value="all">All groups</option>
+            </select>
+            <div class="toolbar-actions">
+              <button class="btn btn-secondary btn-sm" id="selectAllBtn" type="button">Select visible</button>
+              <button class="btn btn-secondary btn-sm" id="selectOnlyBtn" type="button">Only these</button>
+              <button class="btn btn-ghost btn-sm" id="clearAllBtn" type="button">Clear visible</button>
+            </div>
+          </div>
+
+          <div class="channel-list" id="channelList"></div>
+          <div class="list-foot">
+            <span id="showingText">No playlist loaded yet</span>
+            <span><strong id="selectedCount">0</strong> selected</span>
+          </div>
+          <div class="card-body" style="padding-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-ghost btn-sm is-hidden" id="reloadStreamsBtn" type="button">Reload streams from selected categories</button>
+            <button class="btn btn-primary start-btn" id="nextStepChannelsBtn" type="button" disabled>Next step →</button>
+          </div>
+        </section>
+
+      <section class="card channels-card is-hidden" id="categoriesCard">
+        <div class="card-head">
+          <div class="step">02</div>
+          <div style="flex:1; min-width:0;">
+            <h3 class="card-title">Choose categories <span class="badge badge-accent" id="categoryCountBadge">0</span></h3>
+            <p class="card-sub">Xtream Codes server detected. Pick the categories (groups) to load streams from.</p>
+          </div>
+        </div>
+
+        <div class="channel-toolbar">
+          <input class="input" id="categorySearch" type="search" placeholder="Search categories…" autocomplete="off">
+          <select class="input" id="categoryGroupFilter" hidden>
+            <option value="all">All</option>
+          </select>
+          <div class="toolbar-actions">
+            <button class="btn btn-secondary btn-sm" id="selectAllCategoriesBtn" type="button">Select visible</button>
+            <button class="btn btn-secondary btn-sm" id="selectOnlyCategoriesBtn" type="button">Only these</button>
+            <button class="btn btn-ghost btn-sm" id="clearCategoriesBtn" type="button">Clear visible</button>
+          </div>
+        </div>
+
+        <div class="channel-list" id="categoryList"></div>
+        <div class="list-foot">
+          <span id="categoryShowingText">No categories loaded yet</span>
+          <span><strong id="selectedCategoryCount">0</strong> selected</span>
+        </div>
+        <div class="card-body" style="padding-top:0;">
+          <button class="btn btn-primary start-btn" id="nextStepCategoriesBtn" type="button" disabled>Next step →</button>
+        </div>
+
+      </section>
+
+      <aside class="stack is-hidden" id="configAside">
+        <div style="display:flex;justify-content:flex-start;">
+          <button class="btn btn-ghost btn-sm" id="backToChannelsBtn" type="button">← Back to channels</button>
+        </div>
+        <section class="card">
+          <div class="card-head">
+            <div class="step">04</div>
+            <div>
+              <h3 class="card-title">Test setup</h3>
+              <p class="card-sub">How long and how often each stream should be checked.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="settings-grid">
+              <div class="field">
+                <label for="durationValue">Test duration</label>
+                <div class="duration-control">
+                  <input class="input" id="durationValue" type="number" min="1" step="1" value="15" inputmode="numeric">
+                  <select class="input" id="durationUnit">
+                    <option value="seconds">Seconds</option>
+                    <option value="minutes">Minutes</option>
+                    <option value="hours">Hours</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="probeTimeout">Probe timeout</label>
+                <select class="input" id="probeTimeout">
+                  <option value="10">10 seconds</option>
+                  <option value="20" selected>20 seconds</option>
+                  <option value="30">30 seconds</option>
+                  <option value="60">60 seconds</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field" style="margin-top:15px;">
+              <span class="field-label">Loop mode</span>
+              <div class="mode-grid">
+                <label class="mode-card"><input type="radio" name="loopMode" value="single" checked>Single run</label>
+                <label class="mode-card"><input type="radio" name="loopMode" value="loop-times">Loop X times</label>
+                <label class="mode-card"><input type="radio" name="loopMode" value="infinite">Infinite</label>
+              </div>
+              <div class="iterations-row is-hidden" id="iterationsRow">
+                <label for="loopIterations" class="hint">Iterations</label>
+                <input class="input" id="loopIterations" type="number" min="1" max="10000" value="3" inputmode="numeric">
+              </div>
+            </div>
+
+            <div class="field" style="margin-top:15px;">
+              <label for="concurrency">Parallel probes</label>
+              <select class="input" id="concurrency">
+                <option value="1" selected>1 · sequential (best accuracy)</option>
+                <option value="2">2 at a time</option>
+                <option value="3">3 at a time</option>
+                <option value="5">5 at a time</option>
+                <option value="8">8 at a time (fast)</option>
+                <option value="10">10 at a time (fastest)</option>
+              </select>
+            </div>
+            <p class="hint" style="margin-top:9px;" id="durationPreview">15s of stability monitoring per channel.</p>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <div class="step">05</div>
+            <div>
+              <h3 class="card-title">What to test</h3>
+              <p class="card-sub">Pick the checks that matter. Detected values always appear in results.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="check-grid">
+              <label class="check-card">
+                <input type="checkbox" id="checkResolution" checked>
+                <span class="check-copy"><strong>Resolution</strong><span>Detect width × height and flag streams below your minimum.</span></span>
+              </label>
+              <label class="check-card">
+                <input type="checkbox" id="checkFramerate" checked>
+                <span class="check-copy"><strong>Framerate</strong><span>Read the stream's real FPS and flag low frame rates.</span></span>
+              </label>
+              <label class="check-card">
+                <input type="checkbox" id="checkAudio" checked>
+                <span class="check-copy"><strong>Audio track</strong><span>Confirm that an audio stream is present and report its codec.</span></span>
+              </label>
+              <label class="check-card">
+                <input type="checkbox" id="checkBuffering" checked>
+                <span class="check-copy"><strong>Buffering</strong><span>Monitor the stream for buffering warnings during the test window.</span></span>
+              </label>
+              <label class="check-card">
+                <input type="checkbox" id="checkDisconnects" checked>
+                <span class="check-copy"><strong>Disconnects &amp; errors</strong><span>Count failed reads, timeouts and dropped connections.</span></span>
+              </label>
+              <label class="check-card">
+                <input type="checkbox" id="checkSmoothness" checked>
+                <span class="check-copy"><strong>Smoothness / frame pacing</strong><span>Decode a short sample to verify real 50/60 fps pacing, jitter, gaps and interlacing (slower).</span></span>
+              </label>
+              <label class="check-card">
+                <input type="checkbox" id="checkPicture" checked>
+                <span class="check-copy"><strong>Picture / black screen</strong><span>Detect streams that show a black screen or no picture.</span></span>
+              </label>
+              <label class="check-card">
+                <input type="checkbox" id="autoRetry" >
+                <span class="check-copy"><strong>Auto-retry failed probes</strong><span>Automatically re-probe a channel that fails, up to the counter below.</span></span>
+              </label>
+              <div class="field" style="margin-top:4px;">
+                <label for="retryCount">Retry count</label>
+                <input class="input" id="retryCount" type="number" min="0" max="5" value="2" inputmode="numeric">
+              </div>
+              <div class="check-grid" style="margin-top:8px;">
+                <label class="check-card">
+                  <input type="checkbox" id="retryOn5xx" checked>
+                  <span class="check-copy"><strong>Retry on 5xx (server errors)</strong><span>Re-probe when the stream returns HTTP 500/502/503/etc.</span></span>
+                </label>
+                <label class="check-card">
+                  <input type="checkbox" id="retryOn4xx">
+                  <span class="check-copy"><strong>Retry on 4xx (client errors)</strong><span>Re-probe on HTTP 400/403/404/etc. (off by default).</span></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="threshold-grid">
+              <div class="field">
+                <label for="minResolution">Minimum resolution</label>
+                <select class="input" id="minResolution">
+                  <option value="0" selected>Any</option>
+                  <option value="480">480p</option>
+                  <option value="576">576p</option>
+                  <option value="720">720p</option>
+                  <option value="1080">1080p</option>
+                  <option value="1440">1440p</option>
+                  <option value="2160">4K / 2160p</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="minFps">Minimum framerate</label>
+                <select class="input" id="minFps">
+                  <option value="0" selected>Any</option>
+                  <option value="24">24 fps</option>
+                  <option value="25">25 fps</option>
+                  <option value="30">30 fps</option>
+                  <option value="50">50 fps</option>
+                  <option value="60">60 fps</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card start-card">
+          <div class="card-body">
+            <div class="summary-list">
+              <div class="summary-row"><span>Channels</span><strong id="summaryChannels">0 selected</strong></div>
+              <div class="summary-row"><span>Duration per channel</span><strong id="summaryDuration">15 seconds</strong></div>
+              <div class="summary-row"><span>Loop</span><strong id="summaryLoop">Single run</strong></div>
+              <div class="summary-row"><span>Estimated time</span><strong id="summaryEta">—</strong></div>
+            </div>
+            <button class="btn btn-primary start-btn" id="startBtn" type="submit" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m7 4 13 8-13 8Z"/>
+              </svg>
+              Start testing
+            </button>
+            <p class="start-note">Results open automatically in the live dashboard.</p>
+          </div>
+        </section>
+      </aside>
+    </form>
+  </main>
+
+  <div class="modal-backdrop" id="streamsModalBackdrop" hidden></div>
+  <div class="modal" id="streamsModal" hidden>
+    <div class="modal-card">
+      <h3>Loading streams</h3>
+      <div class="progress-track"><div class="progress-fill" id="streamsProgressFill" style="width:0%;"></div></div>
+      <p id="streamsProgressText">Loading…</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5h.01"/>
+    </svg>
+    <span id="toastText"></span>
+  </div>
+
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const MAX_RENDERED_CHANNELS = 800;
+
+    const state = {
+      channels: [],
+      selected: new Set(),
+      source: '',
+      loading: false,
+      durationParam: null,
+      categories: [],
+      selectedCategories: new Set(),
+      xtreamSource: '',
+      currentStep: 1
+    };
+
+
+    const els = {
+      sourceInput: $('#sourceInput'),
+      loadBtn: $('#loadBtn'),
+      loadBtnText: $('#loadBtnText'),
+      sampleBtn: $('#sampleBtn'),
+      fileInput: $('#fileInput'),
+      loadStatus: $('#loadStatus'),
+      channelsCard: $('#channelsCard'),
+      categoriesCard: $('#categoriesCard'),
+      configAside: $('#configAside'),
+      backToChannelsBtn: $('#backToChannelsBtn'),
+      nextStepChannelsBtn: $('#nextStepChannelsBtn'),
+      nextStepCategoriesBtn: $('#nextStepCategoriesBtn'),
+      reloadStreamsBtn: $('#reloadStreamsBtn'),
+      streamsProgress: $('#streamsProgress'),
+      categoryCountBadge: $('#categoryCountBadge'),
+      categorySearch: $('#categorySearch'),
+      selectAllCategoriesBtn: $('#selectAllCategoriesBtn'),
+      selectOnlyCategoriesBtn: $('#selectOnlyCategoriesBtn'),
+      clearCategoriesBtn: $('#clearCategoriesBtn'),
+      categoryList: $('#categoryList'),
+      categoryShowingText: $('#categoryShowingText'),
+      selectedCategoryCount: $('#selectedCategoryCount'),
+      loadStreamsBtn: $('#loadStreamsBtn'),
+      channelCountBadge: $('#channelCountBadge'),
+      channelSearch: $('#channelSearch'),
+      groupFilter: $('#groupFilter'),
+      selectAllBtn: $('#selectAllBtn'),
+      selectOnlyBtn: $('#selectOnlyBtn'),
+      clearAllBtn: $('#clearAllBtn'),
+      channelList: $('#channelList'),
+      showingText: $('#showingText'),
+      selectedCount: $('#selectedCount'),
+      durationValue: $('#durationValue'),
+      durationUnit: $('#durationUnit'),
+      probeTimeout: $('#probeTimeout'),
+      iterationsRow: $('#iterationsRow'),
+      loopIterations: $('#loopIterations'),
+      concurrency: $('#concurrency'),
+      durationPreview: $('#durationPreview'),
+      checkResolution: $('#checkResolution'),
+      checkFramerate: $('#checkFramerate'),
+      checkAudio: $('#checkAudio'),
+      checkBuffering: $('#checkBuffering'),
+      checkDisconnects: $('#checkDisconnects'),
+      checkSmoothness: $('#checkSmoothness'),
+      checkPicture: $('#checkPicture'),
+      autoRetry: $('#autoRetry'),
+      retryCount: $('#retryCount'),
+      retryOn5xx: $('#retryOn5xx'),
+      retryOn4xx: $('#retryOn4xx'),
+      minResolution: $('#minResolution'),
+      minFps: $('#minFps'),
+      summaryChannels: $('#summaryChannels'),
+      summaryDuration: $('#summaryDuration'),
+      summaryLoop: $('#summaryLoop'),
+      summaryEta: $('#summaryEta'),
+      startBtn: $('#startBtn'),
+      setupForm: $('#setupForm'),
+      toast: $('#toast'),
+      toastText: $('#toastText'),
+      themeToggle: $('#themeToggle'),
+      engineText: $('#engineText'),
+      engineDot: $('#engineDot')
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[char]);
+    }
+
+    function hostLabel(url) {
+      try {
+        return new URL(url).hostname.replace(/^www\./, '');
+      } catch (error) {
+        return url.length > 48 ? url.slice(0, 48) + '…' : url;
+      }
+    }
+
+    function humanDuration(seconds) {
+      seconds = Math.max(0, Math.round(seconds));
+      if (seconds < 60) return `${seconds} second${seconds === 1 ? '' : 's'}`;
+      if (seconds < 3600) {
+        const minutes = Math.floor(seconds / 60);
+        const rest = seconds % 60;
+        return `${minutes}m${rest ? ` ${rest}s` : ''}`;
+      }
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      return `${hours}h${minutes ? ` ${minutes}m` : ''}`;
+    }
+
+    let toastTimer = null;
+    function showToast(message, isError = false) {
+      els.toastText.textContent = message;
+      els.toast.classList.toggle('error', isError);
+      els.toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => els.toast.classList.remove('show'), 5200);
+    }
+
+    // Theme
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      localStorage.setItem('sw-theme', theme);
+      els.themeToggle.innerHTML = theme === 'dark'
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8Z"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+    }
+
+    applyTheme(localStorage.getItem('sw-theme') ||
+      (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+
+    els.themeToggle.addEventListener('click', () => {
+      applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+    });
+
+    async function postJSON(url, payload) {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      let data = {};
+      try { data = await response.json(); } catch (error) { /* ignore */ }
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.error || data.message || `Request failed (${response.status})`);
+      }
+      return data;
+    }
+
+    function setLoading(isLoading, label = 'Load playlist') {
+      state.loading = isLoading;
+      els.loadBtn.disabled = isLoading;
+      els.loadBtnText.textContent = label;
+      updateSummary();
+    }
+
+    function setLoadStatus(message, type = '') {
+      els.loadStatus.textContent = message;
+      els.loadStatus.className = 'hint load-status' + (type ? ' ' + type : '');
+    }
+
+    function currentDurationSeconds() {
+      const raw = parseFloat(els.durationValue.value || '0');
+      const unit = els.durationUnit.value;
+      const multiplier = unit === 'minutes' ? 60 : unit === 'hours' ? 3600 : 1;
+      if (!Number.isFinite(raw) || raw <= 0) return 15;
+      return Math.max(1, Math.round(raw * multiplier));
+    }
+
+    function selectedChannels() {
+      return state.channels.filter((channel) => state.selected.has(channel.url));
+    }
+
+    function filteredChannels() {
+      const query = els.channelSearch.value.trim().toLowerCase();
+      const group = els.groupFilter.value;
+      return state.channels.filter((channel) => {
+        if (group !== 'all' && channel.group !== group) return false;
+        if (!query) return true;
+        return channel.name.toLowerCase().includes(query) ||
+          channel.group.toLowerCase().includes(query) ||
+          channel.url.toLowerCase().includes(query);
+      });
+    }
+
+    function showStep(step) {
+      state.currentStep = step;
+      const playlist = document.getElementById('playlistCard');
+      const channels = els.channelsCard;
+      const categories = els.categoriesCard;
+      const config = els.configAside;
+
+      // reset
+      if (playlist) playlist.style.display = step === 1 ? '' : 'none';
+      if (config) {
+        config.classList.toggle('is-hidden', step !== 4);
+        config.style.display = step === 4 ? '' : 'none';
+      }
+
+      if (step === 1) {
+        if (channels) { channels.classList.add('is-hidden'); channels.style.display = 'none'; }
+        if (categories) { categories.classList.add('is-hidden'); categories.style.display = 'none'; }
+      } else if (step === 2) {
+        if (categories) {
+          const show = !categories.classList.contains('is-hidden');
+          categories.style.display = show ? '' : 'none';
+        }
+        if (channels) { channels.classList.add('is-hidden'); channels.style.display = 'none'; }
+      } else if (step === 3) {
+        if (channels) {
+          const show = !channels.classList.contains('is-hidden');
+          channels.style.display = show ? '' : 'none';
+        }
+        if (categories) { categories.classList.add('is-hidden'); categories.style.display = 'none'; }
+      } else if (step === 4) {
+        if (channels) { channels.classList.add('is-hidden'); channels.style.display = 'none'; }
+        if (categories) { categories.classList.add('is-hidden'); categories.style.display = 'none'; }
+      }
+    }
+
+
+    function isXtreamSource(source) {
+      return /username=/i.test(source || '') && /password=/i.test(source || '') &&
+        (/get\.php/i.test(source || '') || /player_api\.php/i.test(source || ''));
+    }
+
+    function filteredCategories() {
+      const query = (els.categorySearch && els.categorySearch.value || '').trim().toLowerCase();
+      return state.categories.filter((category) => {
+        if (!query) return true;
+        return category.name.toLowerCase().includes(query) ||
+          String(category.id).toLowerCase().includes(query);
+      });
+    }
+
+    function renderCategories() {
+      const list = filteredCategories();
+      const shown = list.slice(0, MAX_RENDERED_CHANNELS);
+      if (!shown.length) {
+        els.categoryList.innerHTML = '<div class="channel-list-empty">No categories match this filter.</div>';
+      } else {
+        els.categoryList.innerHTML = shown.map((category) => `
+          <label class="channel-row">
+            <input type="checkbox" data-id="${escapeHtml(category.id)}" ${state.selectedCategories.has(category.id) ? 'checked' : ''}>
+            <span class="channel-main">
+              <span class="channel-name" title="${escapeHtml(category.name)}">${escapeHtml(category.name)}</span>
+              <span class="channel-meta">ID ${escapeHtml(category.id)}</span>
+            </span>
+            <span class="channel-url" title="${escapeHtml(category.id)}">${escapeHtml(category.id)}</span>
+          </label>
+        `).join('');
+      }
+      const hiddenCount = list.length - shown.length;
+      els.categoryShowingText.textContent = hiddenCount > 0
+        ? `Showing ${shown.length} of ${list.length} matches — refine your search`
+        : `${list.length} categor${list.length === 1 ? 'y' : 'ies'} shown`;
+      els.categoryCountBadge.textContent = String(state.categories.length);
+      els.selectedCategoryCount.textContent = String(state.selectedCategories.size);
+      if (els.loadStreamsBtn) els.loadStreamsBtn.disabled = state.loading || state.selectedCategories.size === 0;
+      if (els.nextStepCategoriesBtn) els.nextStepCategoriesBtn.disabled = state.selectedCategories.size === 0;
+    }
+
+    function populateGroups() {
+      const groups = [...new Set(state.channels.map((channel) => channel.group))]
+        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+      els.groupFilter.innerHTML = `<option value="all">All groups (${state.channels.length})</option>` +
+        groups.map((group) => {
+          const count = state.channels.filter((channel) => channel.group === group).length;
+          return `<option value="${escapeHtml(group)}">${escapeHtml(group)} (${count})</option>`;
+        }).join('');
+    }
+
+    function renderChannels() {
+      const list = filteredChannels();
+      const shown = list.slice(0, MAX_RENDERED_CHANNELS);
+
+      if (!shown.length) {
+        els.channelList.innerHTML = '<div class="channel-list-empty">No channels match this filter.</div>';
+      } else {
+        els.channelList.innerHTML = shown.map((channel) => `
+          <label class="channel-row">
+            <input type="checkbox" data-url="${escapeHtml(channel.url)}" ${state.selected.has(channel.url) ? 'checked' : ''}>
+            <span class="channel-main">
+              <span class="channel-name" title="${escapeHtml(channel.name)}">${escapeHtml(channel.name)}</span>
+              <span class="channel-meta">${escapeHtml(channel.group)} · ${escapeHtml(hostLabel(channel.url))}</span>
+            </span>
+            <span class="channel-url" title="${escapeHtml(channel.url)}">${escapeHtml(channel.url)}</span>
+          </label>
+        `).join('');
+      }
+
+      const hiddenCount = list.length - shown.length;
+      els.showingText.textContent = hiddenCount > 0
+        ? `Showing ${shown.length} of ${list.length} matches — refine your search to see more`
+        : `${list.length} channel${list.length === 1 ? '' : 's'} shown`;
+
+      els.channelCountBadge.textContent = String(state.channels.length);
+      els.selectedCount.textContent = String(state.selected.size);
+      updateSummary();
+      if (els.nextStepChannelsBtn) els.nextStepChannelsBtn.disabled = state.selected.size === 0;
+    }
+
+    function updateSummary() {
+      const count = state.selected.size;
+      const duration = currentDurationSeconds();
+      const loopMode = document.querySelector('input[name="loopMode"]:checked')?.value || 'single';
+      const iterations = Math.max(1, parseInt(els.loopIterations.value || '1', 10) || 1);
+      const concurrency = Math.max(1, parseInt(els.concurrency.value || '1', 10) || 1);
+      const stabilityEnabled = els.checkBuffering.checked || els.checkDisconnects.checked;
+
+      els.summaryChannels.textContent = count
+        ? `${count} channel${count === 1 ? '' : 's'} selected`
+        : '0 selected';
+
+      els.summaryDuration.textContent = humanDuration(duration);
+
+      if (loopMode === 'single') els.summaryLoop.textContent = 'Single run';
+      else if (loopMode === 'loop-times') els.summaryLoop.textContent = `${iterations} iteration${iterations === 1 ? '' : 's'}`;
+      else els.summaryLoop.textContent = 'Infinite';
+
+      let totalSeconds = stabilityEnabled ? Math.ceil((count * duration) / concurrency) : Math.ceil(count * 6 / concurrency);
+      if (loopMode === 'loop-times') totalSeconds *= iterations;
+      if (count === 0) {
+        els.summaryEta.textContent = '—';
+      } else if (loopMode === 'infinite') {
+        els.summaryEta.textContent = `~${humanDuration(totalSeconds)} per loop`;
+      } else {
+        els.summaryEta.textContent = `~${humanDuration(totalSeconds)}`;
+      }
+
+      els.durationPreview.textContent = stabilityEnabled
+        ? `${humanDuration(duration)} of stability monitoring per channel.`
+        : 'Stability monitoring is off — each channel gets a quick metadata probe only.';
+
+      els.startBtn.disabled = state.loading || count === 0;
+    }
+
+    function loadPlaylistIntoUi(payload, sourceLabel) {
+      state.channels = payload.channels || [];
+      state.selected = new Set(state.channels.map((channel) => channel.url));
+      state.source = sourceLabel || els.sourceInput.value.trim();
+      els.channelSearch.value = '';
+      populateGroups();
+      renderChannels();
+      els.channelsCard.classList.remove('is-hidden');
+      showStep(3);
+      setLoadStatus(
+        `Loaded ${state.channels.length} channels from ${sourceLabel || 'playlist'}. All channels are selected.`,
+        'success'
+      );
+      setTimeout(() => els.channelsCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+    }
+
+    async function loadFromSource() {
+      const source = els.sourceInput.value.trim();
+      if (!source) {
+        setLoadStatus('Enter a playlist URL or local path first.', 'error');
+        els.sourceInput.focus();
+        return;
+      }
+
+      setLoading(true, 'Loading…');
+      try {
+        if (isXtreamSource(source)) {
+          setLoadStatus('Fetching Xtream categories…');
+          const payload = await postJSON('/api/xtream/categories', { source });
+          state.categories = payload.categories || [];
+          state.selectedCategories = new Set(state.categories.map((category) => category.id));
+          state.xtreamSource = source;
+          state.channels = [];
+          state.selected = new Set();
+          renderCategories();
+          els.categoriesCard.classList.remove('is-hidden');
+          els.channelsCard.classList.add('is-hidden');
+          setLoadStatus(`Loaded ${state.categories.length} categories. Select categories, then load streams.`, 'success');
+          showStep(2);
+        } else {
+          setLoadStatus('Fetching and parsing playlist…');
+          const payload = await postJSON('/api/load', { source });
+          loadPlaylistIntoUi(payload, source);
+          showStep(3);
+        }
+      } catch (error) {
+        setLoadStatus(error.message, 'error');
+        showToast(error.message, true);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function loadStreamsFromCategories() {
+      const selected = [...state.selectedCategories];
+      if (!selected.length) {
+        showToast('Select at least one category first.', true);
+        return;
+      }
+      setLoading(true, 'Loading streams…');
+      const backdrop = document.getElementById('streamsModalBackdrop');
+      const modal = document.getElementById('streamsModal');
+      const fill = document.getElementById('streamsProgressFill');
+      const text = document.getElementById('streamsProgressText');
+      if (backdrop) backdrop.hidden = false;
+      if (modal) modal.hidden = false;
+      if (fill) fill.style.width = '0%';
+      if (text) text.textContent = `Loading streams from ${selected.length} categor${selected.length === 1 ? 'y' : 'ies'}…`;
+
+      const all = [];
+      const seen = new Set();
+      try {
+        for (let i = 0; i < selected.length; i++) {
+          const payload = await postJSON('/api/xtream/streams', {
+            source: state.xtreamSource,
+            category_ids: [selected[i]]
+          });
+          (payload.channels || []).forEach((channel) => {
+            if (seen.has(channel.url)) return;
+            seen.add(channel.url);
+            all.push(channel);
+          });
+          const pct = Math.round(((i + 1) / selected.length) * 100);
+          if (fill) fill.style.width = pct + '%';
+          if (text) text.textContent = `Loaded ${all.length} channels so far · category ${i + 1} of ${selected.length}`;
+        }
+
+        state.channels = all;
+        state.selected = new Set(state.channels.map((channel) => channel.url));
+        state.source = state.xtreamSource;
+        els.sourceInput.value = state.xtreamSource;
+        els.channelSearch.value = '';
+        populateGroups();
+        renderChannels();
+        els.channelsCard.classList.remove('is-hidden');
+        els.categoriesCard.classList.add('is-hidden');
+        if (els.reloadStreamsBtn) els.reloadStreamsBtn.classList.remove('is-hidden');
+        setLoadStatus(`Loaded ${state.channels.length} channels from ${selected.length} categories.`, 'success');
+        showStep(3);
+        if (els.nextStepChannelsBtn) els.nextStepChannelsBtn.disabled = state.selected.size === 0;
+        setTimeout(() => els.channelsCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+      } catch (error) {
+        setLoadStatus(error.message, 'error');
+        showToast(error.message, true);
+      } finally {
+        setLoading(false);
+        const backdrop = document.getElementById('streamsModalBackdrop');
+        const modal = document.getElementById('streamsModal');
+        if (backdrop) backdrop.hidden = true;
+        if (modal) modal.hidden = true;
+      }
+    }
+
+    async function loadFromFile(file) {
+      if (!file) return;
+      setLoading(true, 'Reading…');
+      setLoadStatus(`Reading ${file.name}…`);
+      try {
+        const text = await file.text();
+        const payload = await postJSON('/api/load', { content: text, filename: file.name });
+        els.sourceInput.value = file.name;
+        loadPlaylistIntoUi(payload, file.name);
+        showStep(3);
+      } catch (error) {
+        setLoadStatus(error.message, 'error');
+        showToast(error.message, true);
+      } finally {
+        setLoading(false);
+        els.fileInput.value = '';
+      }
+    }
+
+    async function startTest(event) {
+      event.preventDefault();
+      const channels = selectedChannels();
+      if (!channels.length) {
+        showToast('Select at least one channel before starting.', true);
+        return;
+      }
+
+      const loopMode = document.querySelector('input[name="loopMode"]:checked')?.value || 'single';
+      const iterations = Math.max(1, parseInt(els.loopIterations.value || '1', 10) || 1);
+      const options = {
+        check_resolution: els.checkResolution.checked,
+        check_framerate: els.checkFramerate.checked,
+        check_audio: els.checkAudio.checked,
+        check_buffering: els.checkBuffering.checked,
+        check_disconnects: els.checkDisconnects.checked,
+        check_smoothness: els.checkSmoothness.checked,
+        check_picture: els.checkPicture.checked,
+        auto_retry: els.autoRetry.checked,
+        retry_count: parseInt(els.retryCount.value || '0', 10) || 0,
+        retry_on_5xx: els.retryOn5xx.checked,
+        retry_on_4xx: els.retryOn4xx.checked,
+        min_height: parseInt(els.minResolution.value || '0', 10) || 0,
+        min_fps: parseFloat(els.minFps.value || '0') || 0,
+        probe_timeout: parseInt(els.probeTimeout.value || '20', 10) || 20,
+        concurrency: parseInt(els.concurrency.value || '1', 10) || 1
+      };
+
+      const originalHtml = els.startBtn.innerHTML;
+      els.startBtn.disabled = true;
+      els.startBtn.innerHTML = '<span class="spinner"></span> Starting…';
+
+      try {
+        await postJSON('/api/start', {
+          source: state.source || els.sourceInput.value.trim() || 'selected channels',
+          selected_channels: channels,
+          duration_seconds: currentDurationSeconds(),
+          loop_mode: loopMode,
+          loop_iterations: loopMode === 'loop-times' ? iterations : 1,
+          options
+        });
+        window.location.href = '/results.html';
+      } catch (error) {
+        showToast(error.message, true);
+        els.startBtn.disabled = false;
+        els.startBtn.innerHTML = originalHtml;
+      }
+    }
+
+    // Events
+    els.loadBtn.addEventListener('click', loadFromSource);
+    els.sampleBtn.addEventListener('click', () => {
+      els.sourceInput.value = 'data/test_sample.m3u';
+      loadFromSource();
+    });
+    els.fileInput.addEventListener('change', () => loadFromFile(els.fileInput.files[0]));
+    els.sourceInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        loadFromSource();
+      }
+    });
+
+    els.channelSearch.addEventListener('input', renderChannels);
+    els.groupFilter.addEventListener('change', renderChannels);
+
+    els.selectAllBtn.addEventListener('click', () => {
+      filteredChannels().forEach((channel) => state.selected.add(channel.url));
+      renderChannels();
+    });
+
+    els.selectOnlyBtn.addEventListener('click', () => {
+      state.selected = new Set(filteredChannels().map((channel) => channel.url));
+      renderChannels();
+    });
+
+    els.clearAllBtn.addEventListener('click', () => {
+      filteredChannels().forEach((channel) => state.selected.delete(channel.url));
+      renderChannels();
+    });
+
+    els.channelList.addEventListener('change', (event) => {
+      const checkbox = event.target.closest('input[type="checkbox"][data-url]');
+      if (!checkbox) return;
+      if (checkbox.checked) state.selected.add(checkbox.dataset.url);
+      else state.selected.delete(checkbox.dataset.url);
+      els.selectedCount.textContent = String(state.selected.size);
+      updateSummary();
+      if (els.nextStepChannelsBtn) els.nextStepChannelsBtn.disabled = state.selected.size === 0;
+    });
+
+    document.querySelectorAll('input[name="loopMode"]').forEach((radio) => {
+      radio.addEventListener('change', () => {
+        els.iterationsRow.classList.toggle('is-hidden', radio.value !== 'loop-times');
+        updateSummary();
+      });
+    });
+
+    [els.durationValue, els.durationUnit, els.probeTimeout, els.loopIterations, els.concurrency,
+      els.checkResolution, els.checkFramerate, els.checkAudio, els.checkBuffering, els.checkDisconnects,
+      els.checkSmoothness, els.checkPicture, els.autoRetry, els.retryCount, els.retryOn5xx, els.retryOn4xx, els.minResolution, els.minFps].forEach((element) => {
+      element.addEventListener('change', updateSummary);
+      element.addEventListener('input', updateSummary);
+    });
+
+    els.categorySearch.addEventListener('input', renderCategories);
+    els.categoryList.addEventListener('change', (event) => {
+      const checkbox = event.target.closest('input[type="checkbox"][data-id]');
+      if (!checkbox) return;
+      if (checkbox.checked) state.selectedCategories.add(checkbox.dataset.id);
+      else state.selectedCategories.delete(checkbox.dataset.id);
+      els.selectedCategoryCount.textContent = String(state.selectedCategories.size);
+      if (els.loadStreamsBtn) els.loadStreamsBtn.disabled = state.loading || state.selectedCategories.size === 0;
+      if (els.nextStepCategoriesBtn) els.nextStepCategoriesBtn.disabled = state.selectedCategories.size === 0;
+    });
+    els.selectAllCategoriesBtn.addEventListener('click', () => {
+      filteredCategories().forEach((category) => state.selectedCategories.add(category.id));
+      renderCategories();
+    });
+    els.selectOnlyCategoriesBtn.addEventListener('click', () => {
+      state.selectedCategories = new Set(filteredCategories().map((category) => category.id));
+      renderCategories();
+    });
+    els.clearCategoriesBtn.addEventListener('click', () => {
+      filteredCategories().forEach((category) => state.selectedCategories.delete(category.id));
+      renderCategories();
+    });
+    if (els.reloadStreamsBtn) {
+      els.reloadStreamsBtn.addEventListener('click', () => {
+        if (state.selectedCategories.size === 0) return;
+        loadStreamsFromCategories();
+      });
+    }
+    if (els.backToChannelsBtn) {
+      els.backToChannelsBtn.addEventListener('click', () => showStep(3));
+    }
+
+    if (els.nextStepChannelsBtn) {
+      els.nextStepChannelsBtn.addEventListener('click', () => {
+        if (state.selected.size === 0) return;
+        showStep(4);
+      });
+    }
+    if (els.nextStepCategoriesBtn) {
+      els.nextStepCategoriesBtn.addEventListener('click', () => {
+        if (state.selectedCategories.size === 0) return;
+        loadStreamsFromCategories();
+      });
+    }
+    if (els.reloadStreamsBtn) {
+      els.reloadStreamsBtn.addEventListener('click', () => {
+        if (state.selectedCategories.size === 0) return;
+        loadStreamsFromCategories();
+      });
+    }
+
+    els.setupForm.addEventListener('submit', startTest);
+
+    async function init() {
+      updateSummary();
+      showStep(1);
+      try {
+        const defaults = await fetch('/api/defaults').then((response) => response.json());
+        if (defaults.ffprobe && defaults.ffmpeg) {
+          els.engineText.textContent = 'ffprobe + ffmpeg ready';
+          els.engineDot.style.background = 'var(--success)';
+        } else if (defaults.ffprobe) {
+          els.engineText.textContent = 'ffprobe ready · ffmpeg missing';
+          els.engineDot.style.background = 'var(--warning)';
+        } else {
+          els.engineText.textContent = 'ffprobe missing';
+          els.engineDot.style.background = 'var(--danger)';
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const source = params.get('source');
+        const duration = params.get('duration');
+
+        if (duration && Number(duration) > 0) {
+          els.durationValue.value = String(duration);
+          els.durationUnit.value = 'seconds';
+          updateSummary();
+        }
+
+        if (source) {
+          els.sourceInput.value = source;
+          await loadFromSource();
+        } else if (defaults.default_source) {
+          els.sourceInput.value = defaults.default_source;
+        }
+      } catch (error) {
+        els.engineText.textContent = 'Server unavailable';
+        els.engineDot.style.background = 'var(--danger)';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

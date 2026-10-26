@@ -33,12 +33,17 @@
 - 🔄 **Sequential Testing** - Test channels one at a time to isolate server-side performance issues
 - 📊 **Real-time Dashboard** - Live updates every second with progress tracking
 - 🔁 **Loop Testing** - Single run, loop X times, or infinite loop modes
-- 🎬 **Resolution Detection** - Automatic 720p, 1080p, and 4K detection with icons
+- 🎬 **Resolution Detection** - Automatic 720p, 1080p, and 4K detection with minimum-resolution checks
+- 🎞️ **Framerate Detection** - Reads real stream FPS and flags streams below your threshold
+- 🖤 **Black screen detection** - Detects streams that report a resolution but show no picture
+- 🎭 **Fake-FPS detection** - Uses frame decimation to catch streams that duplicate frames to fake 50/60 fps
+- 🔁 **Auto-retry** - Optionally retry failed probes on 4xx/5xx HTTP errors
 - 📈 **Cumulative Metrics** - Track buffering and disconnects across all loop iterations
-- 🌐 **External M3U Links** - Load playlists from URLs or local files
+- 🌐 **External M3U Links** - Load playlists from URLs, local files, or direct uploads
+- 📡 **Xtream Codes support** - Paste an Xtream `get.php`/`player_api.php` URL, browse categories, and load only the groups you want
 - ⏱️ **Total Time Tracking** - Cumulative time display from initial start
 - 🌓 **Dark Mode** - Toggle between light and dark themes
-- 🔍 **Channel Selection UI** - Interactive GUI with group filtering and search
+- 🔍 **Channel Selection UI** - Interactive web UI with group filtering, search, and checkboxes
 
 ---
 
@@ -48,10 +53,13 @@
 
 - **Stream Validation** - Uses `ffprobe` to detect video/audio streams
 - **Resolution Detection** - Automatically identifies 720p (HD), 1080p (Full HD), and 4K (Ultra HD)
+- **Framerate Detection** - Reads average/real FPS (e.g. 25, 29.97, 50, 60 fps) and validates minimum FPS
+- **Audio Detection** - Reports audio codec and channel count
 - **Buffering Detection** - Tracks buffering events and counts occurrences
 - **Disconnect Tracking** - Monitors connection failures and reconnection attempts
-- **Configurable Duration** - Set custom test duration (1s - 999s) with time units (seconds/minutes/hours)
+- **Configurable Duration** - Set custom test duration with seconds/minutes/hours units (up to 7 days)
 - **Sequential Execution** - Tests one channel at a time to prevent local system bottlenecks
+- **Optional Parallelism** - Probe up to 10 channels at once when speed matters more than isolation
 
 ### Loop Modes
 
@@ -64,11 +72,13 @@
 ### Dashboard Features
 
 - **Live Progress Bar** - Visual progress indicator
-- **Status Indicators** - Pending (gray), Testing (blue), Pass (green), Issue (red)
-- **Resolution Icons** - Visual indicators for 720p, 1080p, and 4K streams
+- **Summary Cards** - Passing streams, issue counts, average framerate and completion
+- **Status Indicators** - Pending (gray), Testing (blue), Pass (green), Issue (amber/red)
+- **Resolution & Framerate Columns** - Detected values with threshold warnings
 - **Buffering Count** - Total buffering events across all loops
 - **Disconnect Count** - Cumulative disconnections across iterations
-- **Details Column** - Error messages, stream information, and resolution data
+- **Details Column** - Error messages, codecs, bitrate, and stream information
+- **Search & Filter** - Filter results by channel name, group, URL or status
 - **Dark Mode** - Eye-friendly dark theme with localStorage persistence
 - **Responsive Design** - Adapts to different screen sizes
 
@@ -125,40 +135,53 @@ pip install -r requirements.txt
 ### Basic Usage
 
 ```bash
-python run_local_test.py <path_to_m3u_file_or_url>
+python run_local_test.py
 ```
 
-**Examples:**
+This starts the local StreamWatcher web app and opens the setup UI in your default browser:
+
+```
+http://localhost:9001
+```
+
+You can also pre-fill the playlist field by passing an M3U URL or local file:
+
 ```bash
 # Local M3U file
 python run_local_test.py data/test_sample.m3u
 
 # External M3U URL
 python run_local_test.py https://example.com/playlist.m3u8
+
+# Choose a different port / don't open a browser
+python run_local_test.py --port 9100 --no-browser
 ```
 
-### Interactive Channel Selection
+### Setup UI
 
-When you run the script, a GUI window will appear:
+The setup screen guides you through the full test configuration:
 
-1. **Select Channels** - Choose channels from groups or search by name
-2. **Set Duration** - Enter test duration (e.g., 15 seconds, 5 minutes, 1 hour)
-3. **Choose Loop Mode**:
-   - Single Run
-   - Loop X Times (specify iterations)
-   - Infinite Loop
-4. **Click "Start Testing"**
+1. **Load a playlist** - paste an M3U URL, enter a local path, upload a `.m3u` file, or use the sample playlist
+2. **Select channels** - search, filter by group, select all or pick exactly what to test
+3. **Set test duration** - seconds, minutes or hours per channel
+4. **Choose loop mode** - single run, loop X times, or infinite
+5. **Choose what to test** - resolution, framerate, audio, buffering, disconnects & errors
+6. **Set thresholds (optional)** - minimum resolution (e.g. 720p/1080p) and minimum framerate (e.g. 25/30/60 fps)
+7. **Start testing** - the live dashboard opens automatically
 
 ### View Dashboard
 
-The dashboard opens automatically in your default browser at:
+The dashboard opens automatically at:
+
 ```
 http://localhost:9001/results.html
 ```
 
+It updates every second and includes resolution, framerate, buffering, error, and connection details for every channel.
+
 ### Stop Testing
 
-Press `Ctrl+C` in the terminal to stop the test runner.
+Click **Stop** on the dashboard, or press `Ctrl+C` in the terminal to stop the local server.
 
 ---
 
@@ -208,27 +231,30 @@ The dashboard displays:
 
 | Column | Description |
 |--------|-------------|
-| **Channel** | Channel name with resolution icon |
-| **Status** | Current status (pending/testing/pass/issue) |
-| **Resolution** | Detected resolution with icon (720p/1080p/4K) |
+| **Channel** | Channel name, group and stream host |
+| **Status** | Current status (pending/testing/pass/issue/error/stopped) |
+| **Resolution** | Detected resolution and label (720p/1080p/1440p/4K) |
+| **Framerate** | Detected stream FPS (highlighted when below minimum) |
 | **Tested** | Seconds tested for current iteration |
-| **Disconnects** | Total disconnection count (cumulative) |
+| **Errors** | Total error/disconnection count (cumulative) |
 | **Buffering** | Total buffering event count (cumulative) |
-| **Details** | Stream information or error messages |
+| **Details** | Codecs, bitrate, stream information or error messages |
 
 ### Status Colors
 
 - 🔵 **Testing** - Currently being tested
 - ⚪ **Pending** - Waiting to be tested
 - 🟢 **Pass** - Stream validated successfully
-- 🔴 **Issue** - Buffering or connection errors detected
+- 🟠 **Issue** - Buffering, errors or threshold checks failed
+- 🔴 **Error** - Stream could not be probed at all
+- ⚫ **Stopped** - Test was stopped before this channel finished
 
 ### Loop Information
 
 When using loop modes, the dashboard shows:
 - **Single Run**: No loop indicator
-- **Loop X Times**: "Loop Iteration: 3/5"
-- **Infinite Loop**: "Infinite Loop - Iteration: 7"
+- **Loop X Times**: "Iteration: 3 · 12 of 20 channels completed"
+- **Infinite Loop**: Continuous iterations until stopped
 
 ---
 
@@ -236,8 +262,11 @@ When using loop modes, the dashboard shows:
 
 ```
 streamwatcher/
-├── run_local_test.py           # Main test runner
-├── results.html                # Dashboard interface
+├── run_local_test.py           # Web app, API and test runner
+├── index.html                  # Setup / channel selection UI
+├── results.html                # Live results dashboard
+├── assets/
+│   └── theme.css               # Shared UI theme
 ├── requirements.txt            # Python dependencies
 ├── data/
 │   └── test_sample.m3u        # Sample M3U playlist
@@ -245,7 +274,7 @@ streamwatcher/
 │   └── iptv_monitor/
 │       ├── config.py          # Configuration
 │       ├── db.py              # Database operations
-│       └── worker.py          # Stream testing logic
+│       └── worker.py          # Stream probing and monitoring logic
 └── README.md                  # This file
 ```
 
@@ -282,6 +311,24 @@ Contains:
 
 ---
 
+## ☁️ Free cloud deployment (optional)
+
+StreamWatcher is primarily a **local** tool, but you can share it via a free container host.
+
+**Dockerfile** (already compatible):
+```dockerfile
+FROM python:3.11-slim
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
+EXPOSE 9001
+CMD ["python", "run_local_test.py", "--no-browser", "--port", "9001"]
+```
+
+Deploy the image to **Hugging Face Spaces**, **Koyeb**, **Render**, or **Fly.io** (all have free tiers).
+⚠️ Hosting publicly exposes users' IPTV URLs/credentials and runs ffmpeg on third-party URLs — add authentication and limits before sharing.
+
 ## 🐛 Troubleshooting
 
 ### Port Already in Use
@@ -302,18 +349,15 @@ ffprobe -version
 
 If not installed, see [Installation](#-installation) section.
 
-### Permission Errors
+### Port Already in Use
 
-On Linux, you may need to kill ports with sudo:
-```bash
-sudo fuser -k 9001/tcp
-```
+StreamWatcher automatically picks the next free port (9002, 9003, …) and prints the URL it chose. You don't need to kill anything. Use `--port` if you want to jump to a specific port.
 
 ### Browser Not Opening
 
-Manually navigate to:
+Manually navigate to the URL printed in the terminal, for example:
 ```
-http://localhost:9001/results.html
+http://localhost:9001
 ```
 
 ---
@@ -321,23 +365,13 @@ http://localhost:9001/results.html
 ## 📝 Example Output
 
 ```
-[INFO] Found 10 channels. Opening channel selector...
-[INFO] Selected 10 channels for testing.
-[INFO] Test duration set to 15 seconds
-[INFO] Loop mode: Loop 5 times
-
-[INFO] Starting iteration 1/5
-Reading local file data/test_sample.m3u
-Imported 10 channels
-Starting 10 checks (duration=15s)...
+[INFO] StreamWatcher UI: http://localhost:9001
+Starting 10 channel checks (duration=15s)...
 
 Results:
-3ABN Canada: pass - [video detected] [audio detected] [video detected 1280x720]
-3ABN English: pass - [video detected] [audio detected] [video detected 1920x1080]
+3ABN Canada: pass - [Video: 720p / h264 / 30 fps] [Audio: aac / 2ch] [1280x720, 30 fps]
+3ABN English: pass - [Video: 1080p / h264 / 25 fps] [Audio: aac / 2ch] [1920x1080, 25 fps]
 ...
-
-[INFO] Iteration 1 complete. Looping again...
-[INFO] Starting iteration 2/5
 ```
 
 ## 💖 Support the Project

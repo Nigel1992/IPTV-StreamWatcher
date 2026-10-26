@@ -12,17 +12,19 @@ source "$VENV_DIR/bin/activate"
 echo "Installing pip packages..."
 pip install -r "$ROOT_DIR/requirements.txt"
 
-echo "Creating systemd user service (template)..."
+echo "Creating systemd user service..."
 SERVICE_FILE="$HOME/.config/systemd/user/iptv-monitor.service"
 mkdir -p "$(dirname "$SERVICE_FILE")"
-cat > "$SERVICE_FILE" <<'EOF'
+cat > "$SERVICE_FILE" <<EOF
 [Unit]
-Description=IPTV Monitor (user-level)
+Description=StreamWatcher IPTV monitor (user-level)
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=$HOME/.local/share/iptv-monitor/.venv/bin/python -m iptv_monitor.main
+WorkingDirectory=$ROOT_DIR
+Environment=IPTV_PORT=9001
+ExecStart=$VENV_DIR/bin/python $ROOT_DIR/run_local_test.py --no-browser
 Restart=on-failure
 
 [Install]
@@ -30,15 +32,22 @@ WantedBy=default.target
 EOF
 
 echo "Creating desktop entry..."
-DESKTOP_FILE="$HOME/.local/share/applications/iptv-monitor.desktop"
+DESKTOP_FILE="$HOME/.local/share/applications/streamwatcher.desktop"
 mkdir -p "$(dirname "$DESKTOP_FILE")"
-cat > "$DESKTOP_FILE" <<'EOF'
+cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
-Name=IPTV Monitor
-Exec=$VENV_DIR/bin/python -m iptv_monitor.main
+Name=StreamWatcher
+Comment=IPTV stream validation dashboard
+Exec=$VENV_DIR/bin/python $ROOT_DIR/run_local_test.py
+Path=$ROOT_DIR
+Icon=video-x-generic
 Type=Application
 Terminal=false
-Categories=Utility;
+Categories=AudioVideo;Utility;
 EOF
 
-echo "Install complete. Enable the service with: systemctl --user enable --now iptv-monitor.service"
+echo "Install complete."
+echo "Launch StreamWatcher from your application menu, or run:"
+echo "  $VENV_DIR/bin/python $ROOT_DIR/run_local_test.py"
+echo "Enable the background service with:"
+echo "  systemctl --user enable --now iptv-monitor.service"

@@ -1,10 +1,12 @@
 [Unit]
-Description=IPTV Monitor (user-level)
+Description=StreamWatcher IPTV monitor (user-level)
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/YOURUSER/.venv/bin/python -m iptv_monitor.main
+WorkingDirectory=%h/streamwatcher
+Environment=IPTV_PORT=9001
+ExecStart=%h/streamwatcher/.venv/bin/python %h/streamwatcher/run_local_test.py --no-browser
 Restart=on-failure
 
 [Install]
