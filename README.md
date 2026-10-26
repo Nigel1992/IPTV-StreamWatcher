@@ -163,15 +163,17 @@ python run_local_test.py --port 9100 --no-browser
 
 ### Setup UI
 
-The setup screen guides you through the full test configuration:
+The setup screen guides you through the full test configuration (one step at a time):
 
-1. **Load a playlist** - paste an M3U URL, enter a local path, upload a `.m3u` file, or use the sample playlist
-2. **Select channels** - search, filter by group, select all or pick exactly what to test
-3. **Set test duration** - seconds, minutes or hours per channel
-4. **Choose loop mode** - single run, loop X times, or infinite
-5. **Choose what to test** - resolution, framerate, audio, buffering, disconnects & errors
-6. **Set thresholds (optional)** - minimum resolution (e.g. 720p/1080p) and minimum framerate (e.g. 25/30/60 fps)
-7. **Start testing** - the live dashboard opens automatically
+1. **Load a playlist** - paste an M3U URL, enter a local path, upload a `.m3u` file, use the sample playlist, **or** paste an Xtream Codes `get.php`/`player_api.php` URL
+2. **Choose categories (Xtream only)** - pick the groups you want, then load their streams (with a live progress dialog)
+3. **Select channels** - search, filter by group, select all / only visible / clear, or pick exactly what to test
+4. **Set test duration** - seconds, minutes or hours per channel
+5. **Choose loop mode** - single run, loop X times, or infinite
+6. **Choose what to test** - resolution, framerate, audio, buffering, disconnects & errors, smoothness/frame-pacing, picture/black screen
+7. **Auto-retry (optional)** - retry on 5xx/4xx HTTP errors, with a configurable retry count
+8. **Set thresholds (optional)** - minimum resolution (e.g. 720p/1080p) and minimum framerate (e.g. 25/30/60 fps)
+9. **Start testing** - the live dashboard opens automatically
 
 ### View Dashboard
 
