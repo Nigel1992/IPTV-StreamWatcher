@@ -1401,5 +1401,16 @@
 
     init();
   </script>
+  <script>
+    // Fallback for the simulated demo: ensure the engine pill updates even if fetch mocking is delayed.
+    setTimeout(function(){
+      var el = document.getElementById('engineText');
+      if (el && (el.textContent === 'Checking tools…' || el.textContent === 'Server unavailable')) {
+        el.textContent = 'ffprobe + ffmpeg ready (demo)';
+      }
+      var dot = document.getElementById('engineDot');
+      if (dot) dot.style.background = 'var(--success)';
+    }, 1200);
+  </script>
 </body>
 </html>
