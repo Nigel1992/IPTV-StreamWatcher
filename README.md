@@ -45,6 +45,12 @@
 - 🌓 **Dark Mode** - Toggle between light and dark themes
 - 🔍 **Channel Selection UI** - Interactive web UI with group filtering, search, and checkboxes
 
+## 🌐 Live demo (simulated)
+
+Try the UI without installing anything: **https://nigel1992.github.io/IPTV-StreamWatcher/**
+
+> ⚠️ This is a **simulated demo** — no real streams are probed and no data leaves your browser. Run `python run_local_test.py` locally for real validation.
+
 ## 📸 Screenshots
 
 ![StreamWatcher setup UI](assets/screenshot-step1.png)

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamWatcher · Demo (simulated)</title>
+  <link rel="stylesheet" href="assets/theme.css">
+  <style>
+    .shell { width: min(1100px, calc(100% - 48px)); margin: 0 auto; padding: 22px 0 70px; }
+    .demo-banner { margin: 0 0 18px; padding: 12px 16px; border: 1px solid rgba(255,180,84,0.4); border-radius: 12px; background: rgba(255,180,84,0.1); color: var(--warning); font-size: 0.85rem; }
+    .demo-banner strong { color: var(--text); }
+    .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 800px) { .demo-grid { grid-template-columns: 1fr; } }
+    .card { padding: 18px; }
+    .card h3 { margin: 0 0 8px; font-size: 1rem; }
+    .card p { margin: 0 0 12px; color: var(--muted); font-size: 0.85rem; }
+    .btn { padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); cursor: pointer; font-weight: 600; }
+    .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #07101f; border: none; }
+    .progress-track { height: 10px; border-radius: 999px; background: var(--surface-3); overflow: hidden; border: 1px solid var(--border); }
+    .progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-2) 58%, var(--accent-3)); transition: width 0.3s ease; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 12px; }
+    th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; }
+    .pass { background: rgba(61,220,151,0.15); color: var(--success); }
+    .issue { background: rgba(255,180,84,0.15); color: var(--warning); }
+    .testing { background: rgba(100,181,255,0.15); color: var(--info); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3l2.2-6 3.6 12 2.7-8 1.8 4H21"/></svg></div>
+      <div><h1>StreamWatcher</h1><p>Simulated demo (GitHub Pages)</p></div>
+    </div>
+  </header>
+  <main class="shell">
+    <div class="demo-banner"><strong>Simulated demo.</strong> This page mimics the StreamWatcher UI and animates a fake test run. No real streams are probed, no data leaves your browser. Run <code>python run_local_test.py</code> locally for real validation.</div>
+    <div class="demo-grid">
+      <div class="card">
+        <h3>Step 1 · Load a playlist</h3>
+        <p>Paste an M3U URL or use the sample playlist.</p>
+        <input class="input" id="url" value="data/test_sample.m3u" style="width:100%;margin-bottom:10px;">
+        <button class="btn primary" id="loadBtn">Load playlist (simulated)</button>
+      </div>
+      <div class="card">
+        <h3>Step 2 · Choose channels</h3>
+        <p>Select channels to test.</p>
+        <div id="channels" style="max-height:180px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:8px;"></div>
+        <button class="btn" id="selectAll" style="margin-top:8px;">Select all</button>
+      </div>
+      <div class="card">
+        <h3>Step 3 · Configure &amp; run</h3>
+        <p>Duration: 15s · Concurrency: 3 · Loop: single</p>
+        <button class="btn primary" id="startBtn" disabled>Start simulated test</button>
+      </div>
+      <div class="card">
+        <h3>Live progress</h3>
+        <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <p id="progressText" style="margin-top:8px;color:var(--muted);font-size:0.85rem;">Idle</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h3>Results</h3>
+      <table>
+        <thead><tr><th>Channel</th><th>Status</th><th>Resolution</th><th>Framerate</th><th>Tested</th></tr></thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+  </main>
+  <script>
+    const channels = [
+      {name:'3ABN Canada', res:'1280x720', fps:'29.97 fps', status:'pending', tested:0},
+      {name:'3ABN English', res:'1920x1080', fps:'25 fps', status:'pending', tested:0},
+      {name:'3ABN Kids', res:'1280x720', fps:'30 fps', status:'pending', tested:0},
+      {name:'3ABN Latino', res:'1920x1080', fps:'50 fps', status:'pending', tested:0},
+      {name:'Ziggo Sport 2 Ultra 4K', res:'1920x1080', fps:'50 fps', status:'pending', tested:0},
+    ];
+    let selected = new Set();
+    const channelsEl = document.getElementById('channels');
+    function renderChannels() {
+      channelsEl.innerHTML = channels.map((c,i) => `<label style="display:block;padding:4px 0;"><input type="checkbox" data-i="${i}" ${selected.has(i)?'checked':''}> ${c.name}</label>`).join('');
+      channelsEl.querySelectorAll('input').forEach(cb => cb.addEventListener('change', e => {
+        const i = +e.target.dataset.i;
+        if (e.target.checked) selected.add(i); else selected.delete(i);
+        document.getElementById('startBtn').disabled = selected.size === 0;
+      }));
+    }
+    renderChannels();
+    document.getElementById('selectAll').addEventListener('click', () => { channels.forEach((_,i)=>selected.add(i)); renderChannels(); document.getElementById('startBtn').disabled=false; });
+    document.getElementById('loadBtn').addEventListener('click', () => {
+      document.getElementById('loadBtn').textContent = 'Loaded 5 channels';
+      renderChannels();
+    });
+    const resultsBody = document.getElementById('resultsBody');
+    function renderResults() {
+      resultsBody.innerHTML = channels.map(c => `<tr><td>${c.name}</td><td><span class="badge ${c.status}">${c.status}</span></td><td>${c.res}</td><td>${c.fps}</td><td>${c.tested}s</td></tr>`).join('');
+    }
+    renderResults();
+    document.getElementById('startBtn').addEventListener('click', () => {
+      document.getElementById('startBtn').disabled = true;
+      const order = [...selected];
+      let idx = 0;
+      const total = order.length;
+      function step() {
+        if (idx >= total) { document.getElementById('progressText').textContent = 'All channels completed'; return; }
+        const ci = order[idx];
+        channels[ci].status = 'testing'; channels[ci].tested = 0;
+        renderResults();
+        let t = 0;
+        const timer = setInterval(() => {
+          t++;
+          channels[ci].tested = t;
+          document.getElementById('progressFill').style.width = Math.round(((idx + t/15)/total)*100) + '%';
+          document.getElementById('progressText').textContent = `Testing ${channels[ci].name} · ${t}/15s`;
+          renderResults();
+          if (t >= 15) {
+            clearInterval(timer);
+            channels[ci].status = (ci === 4) ? 'issue' : 'pass';
+            if (ci === 4) channels[ci].res = '1920x1080 (dup frames)';
+            renderResults();
+            idx++;
+            setTimeout(step, 400);
+          }
+        }, 200);
+      }
+      step();
+    });
+  </script>
+</body>
+</html>
