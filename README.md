@@ -47,29 +47,7 @@
 
 ## 📸 Screenshots
 
-<details>
-<summary><strong>Step 1 — Load a playlist</strong></summary>
-<br>
-<img src="assets/screenshot-step1.png" alt="Step 1: load playlist" width="900">
-</details>
-
-<details>
-<summary><strong>Step 2 — Choose channels (or categories for Xtream)</strong></summary>
-<br>
-<img src="assets/screenshot-step2.png" alt="Step 2: choose channels" width="900">
-</details>
-
-<details>
-<summary><strong>Step 3 — Configure & run</strong></summary>
-<br>
-<img src="assets/screenshot-step4.png" alt="Step 4: configure" width="900">
-</details>
-
-<details>
-<summary><strong>Live dashboard</strong></summary>
-<br>
-<img src="assets/screenshot-dashboard.png" alt="Live dashboard" width="900">
-</details>
+![StreamWatcher setup UI](assets/screenshot-step1.png)
 
 ---
 
