@@ -54,13 +54,13 @@
 </details>
 
 <details>
-<summary><strong>Step 3 — Choose channels</strong></summary>
+<summary><strong>Step 2 — Choose channels (or categories for Xtream)</strong></summary>
 <br>
-<img src="assets/screenshot-step3.png" alt="Step 3: choose channels" width="900">
+<img src="assets/screenshot-step2.png" alt="Step 2: choose channels" width="900">
 </details>
 
 <details>
-<summary><strong>Step 4 — Configure & run</strong></summary>
+<summary><strong>Step 3 — Configure & run</strong></summary>
 <br>
 <img src="assets/screenshot-step4.png" alt="Step 4: configure" width="900">
 </details>
