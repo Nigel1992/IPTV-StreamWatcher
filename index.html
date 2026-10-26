@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+  <script>
+    // On GitHub Pages, redirect to the simulated demo (the real app needs a backend).
+    if (location.hostname.endsWith('github.io') && !location.pathname.includes('/docs/')) {
+      location.replace(location.pathname.replace(/\\/$/, '') + '/docs/');
+    }
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StreamWatcher · IPTV stream validation</title>
