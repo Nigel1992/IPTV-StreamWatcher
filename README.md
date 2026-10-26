@@ -5,7 +5,7 @@
 </p>
 
 
-# � StreamWatcher - Professional IPTV Channel Monitoring Suite
+# 📺 StreamWatcher - Professional IPTV Channel Monitoring Suite
 
 <div align="center">
 
