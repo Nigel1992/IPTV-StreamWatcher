@@ -45,6 +45,10 @@
 - 🌓 **Dark Mode** - Toggle between light and dark themes
 - 🔍 **Channel Selection UI** - Interactive web UI with group filtering, search, and checkboxes
 
+## 📸 Screenshots
+
+![StreamWatcher setup UI](assets/screenshot.png)
+
 ---
 
 ## 🚀 Features
