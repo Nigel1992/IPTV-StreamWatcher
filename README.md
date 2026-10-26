@@ -47,20 +47,35 @@
 
 ## 📸 Screenshots
 
-**Step 1 — Load a playlist**
-![Step 1: load playlist](assets/screenshot-step1.png)
+<details>
+<summary><strong>Step 1 — Load a playlist</strong></summary>
+<br>
+<img src="assets/screenshot-step1.png" alt="Step 1: load playlist" width="900">
+</details>
 
-**Step 2 — Choose categories (Xtream)**
-![Step 2: choose categories](assets/screenshot-step2-categories.png)
+<details>
+<summary><strong>Step 2 — Choose categories (Xtream)</strong></summary>
+<br>
+<img src="assets/screenshot-step2-categories.png" alt="Step 2: choose categories" width="900">
+</details>
 
-**Step 3 — Choose channels**
-![Step 3: choose channels](assets/screenshot-step3.png)
+<details>
+<summary><strong>Step 3 — Choose channels</strong></summary>
+<br>
+<img src="assets/screenshot-step3.png" alt="Step 3: choose channels" width="900">
+</details>
 
-**Step 4 — Configure & run**
-![Step 4: configure](assets/screenshot-step4.png)
+<details>
+<summary><strong>Step 4 — Configure & run</strong></summary>
+<br>
+<img src="assets/screenshot-step4.png" alt="Step 4: configure" width="900">
+</details>
 
-**Live dashboard**
-![Live dashboard](assets/screenshot-dashboard.png)
+<details>
+<summary><strong>Live dashboard</strong></summary>
+<br>
+<img src="assets/screenshot-dashboard.png" alt="Live dashboard" width="900">
+</details>
 
 ---
 
