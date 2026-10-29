@@ -7,6 +7,8 @@
 
 # 📺 StreamWatcher - Professional IPTV Channel Monitoring Suite
 
+[![Vibe Coded](https://img.shields.io/badge/Vibe_Coded-✨-8A2BE2?style=for-the-badge)](https://github.com)
+
 <div align="center">
 
 ![Python](https://img.shields.io/badge/python-3.13-blue.svg)
