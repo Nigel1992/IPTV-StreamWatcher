@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://discord.gg/UbPRh74PzV">
+  <a href="https://discord.gg/9F2NZuydXT">
     <img alt="Join our Discord" src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" />
   </a>
 </p>
@@ -16,7 +16,7 @@
 ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows-lightgrey.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
-[![Discord](https://img.shields.io/discord/YOUR_SERVER_ID?color=7289da&label=Join%20Our%20Discord&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/UbPRh74PzV)
+[![Discord](https://img.shields.io/discord/YOUR_SERVER_ID?color=7289da&label=Join%20Our%20Discord&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/9F2NZuydXT)
 
 **Real-Time IPTV Stream Validation & Quality Monitoring Dashboard**
 
